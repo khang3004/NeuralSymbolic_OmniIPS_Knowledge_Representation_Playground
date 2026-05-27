@@ -319,7 +319,6 @@ async def explain_proof(request: ExplainRequest):
     Explainability Agent: Translates a dry logical execution trace into a human-readable,
     highly educational explanation using an LLM (LangChain) or a rich offline template.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
     domain = request.domain.lower()
 
     # Formulate a dry trace text summary
@@ -328,10 +327,11 @@ async def explain_proof(request: ExplainRequest):
         trace_text += f"Step {idx+1}: Fired Rule [{step.rule_id}] -> {step.fired_rule_repr}. New facts deduced: {step.new_facts}\n"
 
     # LLM Pathway
-    if api_key:
+    from rag_agent.llm_factory import get_llm
+    llm = get_llm(temperature=0.3)
+    if llm:
         try:
             from langchain_core.prompts import ChatPromptTemplate
-            from langchain_openai import ChatOpenAI
 
             prompt = ChatPromptTemplate.from_messages([
                 ("system", "You are a Lead AI Architect and expert Neuro-Symbolic educational tutor. "
@@ -347,8 +347,7 @@ async def explain_proof(request: ExplainRequest):
                           "Solver Execution Trace:\n{trace}")
             ])
 
-            logger.info("Generating proof explanation via ChatOpenAI...")
-            llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3, openai_api_key=api_key)
+            logger.info("Generating proof explanation via model-agnostic LLM instance...")
             chain = prompt | llm
 
             response = chain.invoke({
@@ -356,9 +355,25 @@ async def explain_proof(request: ExplainRequest):
                 "query": request.query,
                 "trace": trace_text
             })
-            
+            # Cleanly extract string content if returned as structured list (e.g. Google thinking blocks)
+            content_str = ""
+            if isinstance(response.content, str):
+                content_str = response.content
+            elif isinstance(response.content, list):
+                text_parts = []
+                for part in response.content:
+                    if isinstance(part, str):
+                        text_parts.append(part)
+                    elif isinstance(part, dict) and "text" in part:
+                        text_parts.append(part["text"])
+                    elif hasattr(part, "text"):
+                        text_parts.append(getattr(part, "text"))
+                content_str = "".join(text_parts)
+            else:
+                content_str = str(response.content)
+
             return ExplainResponse(
-                explanation=response.content,
+                explanation=content_str,
                 structured=True
             )
 

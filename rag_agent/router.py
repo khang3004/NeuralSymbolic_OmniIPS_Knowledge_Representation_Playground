@@ -222,18 +222,19 @@ def fallback_query_parser(query: str, domain: str) -> Tuple[List[str], str]:
 
 def llm_query_parser(query: str, domain: str) -> Tuple[List[str], str]:
     """
-    LLM-based query parser using LangChain with OpenAI's structured outputs.
-    Falls back to fallback_query_parser if OPENAI_API_KEY is not configured or fails.
+    LLM-based query parser using LangChain with model-agnostic structured outputs.
+    Falls back to fallback_query_parser if LLM is not configured or fails.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        logger.info("OPENAI_API_KEY not configured. Using offline regex fallback parser.")
+    from rag_agent.llm_factory import get_llm
+    llm = get_llm(temperature=0)
+    
+    if not llm:
+        logger.info("LLM factory returned None. Using offline regex fallback parser.")
         return fallback_query_parser(query, domain)
 
     try:
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_core.pydantic_v1 import BaseModel as LangchainBaseModel, Field as LangchainField
-        from langchain_openai import ChatOpenAI
 
         class QueryParseSchema(LangchainBaseModel):
             facts: List[str] = LangchainField(
@@ -255,8 +256,7 @@ def llm_query_parser(query: str, domain: str) -> Tuple[List[str], str]:
             ("human", "Parse this query: {query}")
         ])
 
-        logger.info("Calling OpenAI Chat Completion parser for domain '%s'...", domain)
-        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, openai_api_key=api_key)
+        logger.info("Calling model-agnostic structured parser for domain '%s'...", domain)
         structured_llm = llm.with_structured_output(QueryParseSchema)
         chain = prompt | structured_llm
 
@@ -265,7 +265,7 @@ def llm_query_parser(query: str, domain: str) -> Tuple[List[str], str]:
         return response.facts, response.goal
 
     except Exception as e:
-        logger.warning("LangChain/OpenAI parser call failed: %s. Falling back to offline parser.", e)
+        logger.warning("LangChain model-agnostic parser call failed: %s. Falling back to offline parser.", e)
         return fallback_query_parser(query, domain)
 
 
