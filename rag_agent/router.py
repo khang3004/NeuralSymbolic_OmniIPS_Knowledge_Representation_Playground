@@ -195,14 +195,31 @@ def fallback_query_parser(query: str, domain: str) -> Tuple[List[str], str]:
                     extracted_facts.append(cleaned_pred)
 
     elif domain == "algebra":
+        # Find index of goal keywords
+        goal_idx = -1
+        for kw in ["find", "solve", "prove", "calculate", "what is", "chứng minh", "tìm"]:
+            idx = query_lower.find(kw)
+            if idx != -1:
+                goal_idx = idx
+                break
+
         # Extract equations containing '=' or mathematical terms
         eq_regex = r"\b[a-zA-Z0-9\+\-\*\/\s]+=[ a-zA-Z0-9\+\-\*\/\s]+\b"
         raw_eqs = re.findall(eq_regex, query)
         for eq in raw_eqs:
             cleaned_eq = re.sub(r"\s+", "", eq)
+            # Remove leading non-equation words like 'find', 'given', etc from the equation match
+            cleaned_eq = re.sub(r"^(find|given|solve|prove|tìm|cho)", "", cleaned_eq, flags=re.IGNORECASE)
             
-            # If it's a solved form (like x=3) or after goal keywords, it's the goal
-            if cleaned_eq.startswith("x=") or "solve" in query_lower or "find" in query_lower:
+            # Determine if it's the goal
+            idx = query.find(eq)
+            is_goal = False
+            if cleaned_eq.startswith("x="):
+                is_goal = True
+            elif goal_idx != -1 and idx >= goal_idx:
+                is_goal = True
+                
+            if is_goal:
                 extracted_goal = cleaned_eq
             else:
                 extracted_facts.append(cleaned_eq)
@@ -271,9 +288,11 @@ def llm_query_parser(query: str, domain: str) -> Tuple[List[str], str]:
             "   - Example: 'Chứng minh AB bằng EF biết AB bằng CD và CD bằng EF' -> initial_facts: ['Congruent(AB,CD)', 'Congruent(CD,EF)'], goal_fact: 'Congruent(AB,EF)'\n"
             "   - Example: 'Prove AB equals EF given AB is congruent to CD and CD is congruent to EF' -> initial_facts: ['Congruent(AB,CD)', 'Congruent(CD,EF)'], goal_fact: 'Congruent(AB,EF)'\n\n"
             "3. Algebra:\n"
-            "   - Extract algebraic equations and operation predicates.\n"
+            "   - Extract algebraic equations and formal operation predicates (e.g. 'Subtract(2,both_sides)', 'Add(3,both_sides)').\n"
             "   - Example: 'Giải phương trình x+2=5' -> initial_facts: ['x+2=5'], goal_fact: 'x=3'\n"
-            "   - Example: 'Solve x+2=5' -> initial_facts: ['x+2=5'], goal_fact: 'x=3'\n\n"
+            "   - Example: 'Solve x+2=5' -> initial_facts: ['x+2=5'], goal_fact: 'x=3'\n"
+            "   - Example: 'Given x+2=5, Subtract(2,both_sides), find x=3' -> initial_facts: ['x+2=5', 'Subtract(2,both_sides)'], goal_fact: 'x=3'\n"
+            "   - Example: 'Cho phương trình x+2=5, trừ 2 ở cả hai vế, tìm x=3' -> initial_facts: ['x+2=5', 'Subtract(2,both_sides)'], goal_fact: 'x=3'\n\n"
             "Do not solve the problem. Output ONLY the parsed structures in the specified format without extra words."
         )
 
