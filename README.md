@@ -36,6 +36,12 @@ graph TD
    * Enables **Semantic Routing** with hard-filtering on domain payloads and **GraphRAG** (Graph Retrieval-Augmented Generation) context injection to help parser agents translate unstructured queries.
    * Dashboard available at `http://localhost:6333/dashboard`.
 
+<p align="center">
+  <img src="assets/neo4j_knowledge_base.png" alt="Bipartite Neo4j Knowledge Graph" width="85%" />
+  <br/>
+  <em>Figure 1: Bipartite Neo4j Knowledge Graph display showing Rule nodes connected dynamically to Fact nodes via HAS_INPUT and HAS_OUTPUT relationships.</em>
+</p>
+
 3. **Core Inference Engine (Pure Python):**
    * A completely **domain-agnostic** deterministic logical reasoning kernel.
    * Supports **Forward Chaining** (data-driven exploration to deduce everything from initial facts) and **Backward Chaining** (goal-directed proof search starting from the goal).
@@ -154,6 +160,12 @@ Omni-IPS prohibits the use of synthetic data generators to prevent hallucination
   make ingest-all
   ```
 
+<p align="center">
+  <img src="assets/qdrant_collections.png" alt="Qdrant Vector Database Collections" width="70%" />
+  <br/>
+  <em>Figure 2: Qdrant database collections successfully synchronized and partitioned into Chemistry, Geometry, and Algebra rules.</em>
+</p>
+
 ### 2. Validation & Dry Runs (No Neo4j Needed)
 Validate the extraction and transformation stages of the pipelines without having a live Neo4j instance running:
 
@@ -249,34 +261,62 @@ Omni-IPS is engineered in accordance with strict **SOLID design principles**:
 
 ---
 
-## 8. Advanced Phase 3.5 Upgrades: High-Precision NLP Routing & Diagnostic Safeguards
+## 8. Advanced Phase 3.5 & 4.x Production Upgrades
 
-To elevate Omni-IPS to a production-grade, bulletproof hybrid AI system, several key technical upgrades were implemented in **Phase 3.5**, eliminating logical variable binding errors, vector DB query drift, database schema blocks, and explainability hallucinations:
+To elevate Omni-IPS to a production-grade, bulletproof hybrid AI system, several key technical upgrades were implemented in **Phases 3.5 & 4.x**, eliminating logical variable binding errors, vector DB query drift, database schema blocks, UI latency, and explainability hallucinations:
 
-### 1. Model-Agnostic LLM-Driven Structured Semantic Parser
+### 1. Model-Agnostic LLM-Driven Structured Semantic Parser (Phase 3.5)
 * **The Problem:** Direct vector similarity search over the entire natural language query was highly inaccurate. Dense embeddings cannot parse strict variable bindings (e.g. mapping `AB, CD, EF` to arbitrary templates), completely failing on multilingual/Vietnamese queries.
 * **The Upgrade:** Rewrote `rag_agent/router.py` to use a LangChain model-agnostic chat instance (`get_llm(temperature=0.0)`) and Pydantic schemas (`ExtractedProblem`) to perform deterministic structural parsing.
 * **Result:** Successfully extracts exact symbolic fact templates (such as algebraic equations, operation predicates like `Subtract(2,both_sides)`, and geometric relations) from both English and Vietnamese query expressions with zero semantic drift.
 
-### 2. Multi-Tier Qdrant L2 Verification System
+### 2. Multi-Tier Qdrant L2 Verification System (Phase 3.5)
 * **The Problem:** Fallback vector searches on raw query segments frequently generated weak semantic matches that fell below validation standards, leading to erroneous mappings.
 * **The Upgrade:** Implemented a robust 2-level query resolution mapping pipeline in `map_text_to_graph_fact`:
     1. **Level 1 (Exact Payload Scroll):** Executes a rapid scroll filter query in Qdrant targeting either the `value` or `label` payload fields of domain partitions. If an exact match is found, it maps directly with zero overhead.
     2. **Level 2 (High-Confidence Vector Filtering):** If exact matching fails, it falls back to a vector search restricted by a strict threshold condition (`score >= 0.85`), preventing weak matches from leaking into symbolic solvers.
 
-### 3. Dynamic Neo4j Relationship Rule Loader
+### 3. Dynamic Neo4j Relationship Rule Loader (Phase 3.5)
 * **The Problem:** Ingesting domain data in Neo4j via multiple labels (`MERGE (f:Fact:Geometry ...)`) caused constraint errors if a node already existed as a `:Fact` but lacked the domain label. Additionally, pulling rule lists directly from node properties caused `NoneType` iterable join exceptions.
 * **The Upgrade:** 
     * Refactored ETL scripts (`ingest_*.py`) to perform singular `MERGE (f:Fact {value: row.value, domain: row.domain})` followed by dedicated `SET f:Domain` Cypher execution.
     * Upgraded API queries to dynamically collect rule preconditions and deductions at runtime from active relationships (`HAS_INPUT` and `HAS_OUTPUT`) with Python-level fallback safety buffers.
 
-### 4. Failed Proof Diagnostic & Pedagogical Explainer
+### 4. Failed Proof Diagnostic & Pedagogical Explainer (Phase 3.5)
 * **The Problem:** The explainability agent assumed that every trace submitted resulted in a successful proof. If a solver failed (`goal_reached = False`), the LLM would hallucinate a fictional path to "prove" the impossible.
 * **The Upgrade:** 
     * Extended the `ExplainRequest` API schema and front-end state machinery to pass `goal_reached` directly.
     * Forked `/api/explain` into two distinct cognitive modes: **Success Flow** (rich educational walkthrough of the successful trace) and **Failure Diagnostics Flow** (pedagogical analysis showing mapped facts, steps executed before saturation, and a mathematical analysis explaining the exact logical gap / missing theorems with constructive fixes).
 
-### 5. Seamless Streamlit Hot-Reloading
+### 5. Seamless Streamlit Hot-Reloading (Phase 3.5)
 * **The Problem:** Modifying Streamlit scripts (`ui/app.py`) on the host did not sync to the running UI container because the frontend service ran in isolated context without direct mapping.
 * **The Upgrade:** Configured volume mapping (`- .:/app`) inside `docker-compose.yml` for the frontend service, enabling live hot-reloading of UI features alongside backend developments.
+
+### 6. Precise Propositional Alignment & Commutative Canonicalization (Phase 4.1)
+* **The Problem:** Naive regex splits truncate inner brackets in nested predicates like `RightAngle(Angle(BAC))`, leading to solver mismatches. Furthermore, symmetric relations like `Parallel(AB, CD)` vs `Parallel(CD, AB)` would fail unification under propositional exact matching.
+* **The Upgrades:**
+  * **Nested Balanced Parenthesis Parser:** Implemented an $O(N)$ linear-time parser in `domains/geometry.py` that tracks bracket depth to split parameters strictly at the outer nesting level.
+  * **Commutative Canonicalization:** Symmetric predicates (`Parallel`, `Perpendicular`, `Congruent`, `Similar`, `Equal`, `Intersect`) automatically have their arguments sorted lexicographically to enforce string consistency.
+  * **Pristine Database Sync:** Configured ETL pipelines to clear vector spaces on ingestion, successfully syncing **127 rules and 243 facts** between Neo4j and Qdrant with zero legacy pollution.
+
+### 7. Asynchronous Real-Time Explanation Streaming (Phase 4.2)
+* **The Problem:** Serving full educational proof explanations in a single API call caused high-latency freezes, locking the Streamlit chat frame.
+* **The Upgrade:** Added an async explain controller (`POST /api/explain/stream`) in the FastAPI backend returning a `StreamingResponse` using LangChain's async stream handler `chain.astream()`.
+* **Result:** Streams response chunks chunk-by-chunk in real-time. Streamlit captures the yielded fragments reactively via an async typewriter-like markdown block (`st.write_stream()`), completely eliminating UI lag.
+
+---
+
+## 9. Academic Course Assignment Report
+
+We have compiled a modular, NeurIPS/IEEE-grade **20-page assignment report** for **Applied Knowledge Representation** (Môn học: Biểu diễn tri thức ứng dụng) authored by **Hoang-Khang Nguyen (VNU-HCM University of Science)** detailing the entire mathematical formulation and development process of Omni-IPS:
+*   **Master Entrypoint:** `latex_report/main.tex`
+*   **Submodules:** `abstract.tex`, `introduction.tex`, `pipelines.tex`, `knowledge_graph.tex`, `rag_router.tex`, `reasoning_engine.tex`, `system_integration.tex`, `evaluation.tex`, `conclusion.tex`, `references.bib`
+*   **Compiled PDF Document:** **[main.pdf](latex_report/main.pdf)** (Clickable and viewable locally!)
+
+<p align="center">
+  <img src="assets/demo_Pythagore_1.png" alt="Streamlit Proof Streaming Demo" width="48%" />
+  <img src="assets/demo_BaSO4_1.png" alt="Barium Sulfate Precipitation Demo" width="48%" />
+  <br/>
+  <em>Figure 3: Side-by-side Streamlit UI showcases displaying the real-time proof explanation of the Pythagorean Converse (left) and Barium Sulfate Precipitation proof steps (right).</em>
+</p>
 
