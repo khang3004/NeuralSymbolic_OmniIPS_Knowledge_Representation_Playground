@@ -14,23 +14,41 @@ class GeometryParser(DomainParser):
 
     def parse_fact(self, raw_input: str, fact_id: str) -> Fact:
         cleaned = raw_input.replace(" ", "")
-        match = re.match(r"(\w+)\(([^)]+)\)", cleaned)
-        relation = "Atom"
-        args = [cleaned]
-        canonical_val = cleaned
-
-        if match:
-            relation = match.group(1)
-            args = [arg.strip() for arg in match.group(2).split(",")]
-
-            # For commutative geometric relations like Congruent, Similar, Parallel, etc.
-            # sort arguments to form a standard canonical representation
+        
+        # Safe extraction of outer relation and balanced inner content
+        first_paren = cleaned.find("(")
+        if first_paren != -1 and cleaned.endswith(")"):
+            relation = cleaned[:first_paren]
+            inner_content = cleaned[first_paren+1:-1]
+            
+            # Split by comma only at the top-level (level 0) of parenthesis nesting
+            args = []
+            current_arg = []
+            paren_level = 0
+            for char in inner_content:
+                if char == "," and paren_level == 0:
+                    args.append("".join(current_arg).strip())
+                    current_arg = []
+                else:
+                    if char == "(":
+                        paren_level += 1
+                    elif char == ")":
+                        paren_level -= 1
+                    current_arg.append(char)
+            if current_arg:
+                args.append("".join(current_arg).strip())
+                
+            # For commutative geometric relations, sort arguments
             commutative_relations = {"Congruent", "Similar", "Parallel", "Intersect"}
             if relation in commutative_relations:
                 sorted_args = sorted(args)
-                canonical_val = f"{relation}({', '.join(sorted_args)})"
+                canonical_val = f"{relation}({','.join(sorted_args)})"
             else:
-                canonical_val = f"{relation}({', '.join(args)})"
+                canonical_val = f"{relation}({','.join(args)})"
+        else:
+            relation = "Atom"
+            args = [cleaned]
+            canonical_val = cleaned
 
         return Fact(
             id=fact_id,

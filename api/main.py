@@ -171,27 +171,39 @@ async def solve_problem(request: SolveRequest):
         except Exception as db_err:
             logger.warning("Failed to fetch rules from Neo4j, falling back to mock: %s", db_err, exc_info=True)
             
-        # Predefined mock rules fallback
+        # Predefined fallback rules (representative subset of the full knowledge base)
         if not rules:
             logger.info("Using built-in fallback rules for domain '%s'", domain)
             if domain == "chemistry":
                 raw_rules = [
-                    {"id": "r1", "name": "Sodium Hydration", "inputs": ["Na", "H2O"], "outputs": ["NaOH", "H2"], "description": "Sodium reacting with water."},
-                    {"id": "r2", "name": "Water Synthesis", "inputs": ["H2", "O2"], "outputs": ["H2O"], "description": "Combustion of hydrogen."},
-                    {"id": "r3", "name": "Neutralization", "inputs": ["NaOH", "HCl"], "outputs": ["NaCl", "H2O"], "description": "Acid-base neutralization."},
-                    {"id": "r_direct_na_hcl", "name": "Sodium Acid Reaction", "inputs": ["Na", "HCl"], "outputs": ["NaCl", "H2"], "description": "Direct reaction of Sodium with Hydrochloric acid."}
+                    {"id": "rxn_single_na_h2o", "name": "Sodium Reacting with Water", "inputs": ["Na", "H2O"], "outputs": ["NaOH", "H2"], "description": "2Na + 2H₂O → 2NaOH + H₂."},
+                    {"id": "rxn_synth_water", "name": "Synthesis of Water", "inputs": ["H2", "O2"], "outputs": ["H2O"], "description": "2H₂ + O₂ → 2H₂O."},
+                    {"id": "rxn_double_naoh_hcl", "name": "Neutralization: NaOH + HCl", "inputs": ["NaOH", "HCl"], "outputs": ["NaCl", "H2O"], "description": "NaOH + HCl → NaCl + H₂O."},
+                    {"id": "rxn_double_na_hcl", "name": "Sodium Acid Reaction", "inputs": ["Na", "HCl"], "outputs": ["NaCl", "H2"], "description": "2Na + 2HCl → 2NaCl + H₂."},
+                    {"id": "rxn_decomp_caco3", "name": "Decomposition of CaCO₃", "inputs": ["CaCO3"], "outputs": ["CaO", "CO2"], "description": "CaCO₃ → CaO + CO₂."},
+                    {"id": "rxn_cao_h2o", "name": "Quicklime + Water", "inputs": ["CaO", "H2O"], "outputs": ["Ca(OH)2"], "description": "CaO + H₂O → Ca(OH)₂."},
+                    {"id": "rxn_single_zn_hcl", "name": "Zinc + HCl", "inputs": ["Zn", "HCl"], "outputs": ["ZnCl2", "H2"], "description": "Zn + 2HCl → ZnCl₂ + H₂."},
+                    {"id": "rxn_combust_ch4", "name": "Combustion of Methane", "inputs": ["CH4", "O2"], "outputs": ["CO2", "H2O"], "description": "CH₄ + 2O₂ → CO₂ + 2H₂O."},
                 ]
             elif domain == "geometry":
                 raw_rules = [
-                    {"id": "t_trans", "name": "Congruence Transitivity", "inputs": ["Congruent(AB, CD)", "Congruent(CD, EF)"], "outputs": ["Congruent(AB, EF)"], "description": "Transitivity property."},
-                    {"id": "g_perp_sym", "name": "Perpendicular Symmetry", "inputs": ["Perpendicular(d1, d2)"], "outputs": ["Perpendicular(d2, d1)"], "description": "If d1 is perpendicular to d2, then d2 is perpendicular to d1."},
-                    {"id": "g_para_trans", "name": "Parallel Transitivity", "inputs": ["Parallel(a, b)", "Parallel(b, c)"], "outputs": ["Parallel(a, c)"], "description": "If a || b and b || c, then a || c."}
+                    {"id": "geo_congruence_transitive", "name": "Congruence Transitivity", "inputs": ["Congruent(AB,CD)", "Congruent(CD,EF)"], "outputs": ["Congruent(AB,EF)"], "description": "Transitivity of congruence."},
+                    {"id": "geo_perp_symmetry", "name": "Perpendicular Symmetry", "inputs": ["Perpendicular(AB,CD)"], "outputs": ["Perpendicular(CD,AB)"], "description": "Perpendicularity is symmetric."},
+                    {"id": "geo_parallel_transitive", "name": "Parallel Transitivity", "inputs": ["Parallel(a,b)", "Parallel(b,c)"], "outputs": ["Parallel(a,c)"], "description": "Transitivity of parallel lines."},
+                    {"id": "geo_triangle_angle_sum", "name": "Triangle Angle Sum", "inputs": ["Triangle(A,B,C)"], "outputs": ["Equal(Add(Angle(BAC),Angle(ABC),Angle(ACB)),180)"], "description": "Angles of a triangle sum to 180°."},
+                    {"id": "geo_isosceles_base_angles", "name": "Isosceles Base Angles", "inputs": ["Triangle(A,B,C)", "Congruent(AB,AC)"], "outputs": ["Equal(Angle(ABC),Angle(ACB))"], "description": "Base angles of isosceles triangle are equal."},
+                    {"id": "geo_sas_congruence", "name": "SAS Congruence", "inputs": ["Congruent(AB,DE)", "Equal(Angle(BAC),Angle(EDF))", "Congruent(AC,DF)"], "outputs": ["CongruentTriangles(ABC,DEF)"], "description": "Side-Angle-Side congruence."},
+                    {"id": "geo_perp_to_parallel", "name": "Perp to Parallel", "inputs": ["Perpendicular(L,a)", "Parallel(a,b)"], "outputs": ["Perpendicular(L,b)"], "description": "Line perp to one parallel line is perp to the other."},
                 ]
             elif domain == "algebra":
                 raw_rules = [
-                    {"id": "a_sub_two", "name": "Subtraction Property", "inputs": ["x+2=5", "Subtract(2, both_sides)"], "outputs": ["x=3"], "description": "Subtracting value from both sides."},
-                    {"id": "alg_solve", "name": "Basic Linear Solver", "inputs": ["x+2=5", "Subtract(2)"], "outputs": ["x=3"], "description": "Solving simple linear equation by subtraction."},
-                    {"id": "alg_add_prop", "name": "Addition Property", "inputs": ["x-3=10", "Add(3)"], "outputs": ["x=13"], "description": "Adding value to both sides."}
+                    {"id": "alg_sub_two", "name": "Subtraction Property of 2 (Demo)", "inputs": ["x+2=5", "Subtract(2,both_sides)"], "outputs": ["x=3"], "description": "Demo: x+2=5 → x=3."},
+                    {"id": "alg_sub_both_sides", "name": "Subtraction Property of Equality", "inputs": ["Equation(LHS,RHS)", "Subtract(Val)"], "outputs": ["Equation(LHS-Val,RHS-Val)"], "description": "a=b → a-c=b-c."},
+                    {"id": "alg_add_both_sides", "name": "Addition Property of Equality", "inputs": ["Equation(LHS,RHS)", "Add(Val)"], "outputs": ["Equation(LHS+Val,RHS+Val)"], "description": "a=b → a+c=b+c."},
+                    {"id": "alg_distributive", "name": "Distributive Property", "inputs": ["Expression(a*(b+c))"], "outputs": ["Equal(a*(b+c),a*b+a*c)"], "description": "a(b+c) = ab+ac."},
+                    {"id": "alg_square_of_sum", "name": "Square of a Sum", "inputs": ["Expression((a+b)^2)"], "outputs": ["Equal((a+b)^2,a^2+2*a*b+b^2)"], "description": "(a+b)² = a²+2ab+b²."},
+                    {"id": "alg_diff_of_squares", "name": "Difference of Squares", "inputs": ["Expression(a^2-b^2)"], "outputs": ["Equal(a^2-b^2,(a+b)*(a-b))"], "description": "a²-b² = (a+b)(a-b)."},
+                    {"id": "alg_quadratic_formula", "name": "Quadratic Formula", "inputs": ["QuadraticEquation(a*x^2+b*x+c,0)", "NotEqual(a,0)"], "outputs": ["Equal(x,(-b±sqrt(b^2-4*a*c))/(2*a))"], "description": "x = (-b±√(b²-4ac))/(2a)."},
                 ]
             else:
                 raw_rules = []
@@ -284,24 +296,39 @@ async def solve_query(request: SolveQueryRequest):
         except Exception as db_err:
             logger.warning("Failed to fetch rules from Neo4j, using built-in fallback: %s", db_err, exc_info=True)
 
-        # Default rules fallback
+        # Default rules fallback (representative subset of the full knowledge base)
         if not rules:
             logger.info("Using built-in fallback rules for query resolving on domain '%s'", domain)
             if domain == "chemistry":
                 raw_rules = [
-                    {"id": "rxn_single_na_h2o", "name": "Sodium Reacting with Water", "inputs": ["Na", "H2O"], "outputs": ["NaOH", "H2"], "description": "Sodium reacting with water to produce NaOH and H2."},
-                    {"id": "rxn_double_naoh_hcl", "name": "Neutralization of NaOH and HCl", "inputs": ["NaOH", "HCl"], "outputs": ["NaCl", "H2O"], "description": "Acid-base neutralization."},
-                    {"id": "r_direct_na_hcl", "name": "Sodium Acid Reaction", "inputs": ["Na", "HCl"], "outputs": ["NaCl", "H2"], "description": "Direct reaction of Sodium with Hydrochloric acid."}
+                    {"id": "rxn_single_na_h2o", "name": "Sodium Reacting with Water", "inputs": ["Na", "H2O"], "outputs": ["NaOH", "H2"], "description": "2Na + 2H₂O → 2NaOH + H₂."},
+                    {"id": "rxn_double_naoh_hcl", "name": "Neutralization: NaOH + HCl", "inputs": ["NaOH", "HCl"], "outputs": ["NaCl", "H2O"], "description": "NaOH + HCl → NaCl + H₂O."},
+                    {"id": "rxn_double_na_hcl", "name": "Sodium Acid Reaction", "inputs": ["Na", "HCl"], "outputs": ["NaCl", "H2"], "description": "2Na + 2HCl → 2NaCl + H₂."},
+                    {"id": "rxn_synth_water", "name": "Synthesis of Water", "inputs": ["H2", "O2"], "outputs": ["H2O"], "description": "2H₂ + O₂ → 2H₂O."},
+                    {"id": "rxn_decomp_caco3", "name": "Decomposition of CaCO₃", "inputs": ["CaCO3"], "outputs": ["CaO", "CO2"], "description": "CaCO₃ → CaO + CO₂."},
+                    {"id": "rxn_cao_h2o", "name": "Quicklime + Water", "inputs": ["CaO", "H2O"], "outputs": ["Ca(OH)2"], "description": "CaO + H₂O → Ca(OH)₂."},
+                    {"id": "rxn_single_zn_hcl", "name": "Zinc + HCl", "inputs": ["Zn", "HCl"], "outputs": ["ZnCl2", "H2"], "description": "Zn + 2HCl → ZnCl₂ + H₂."},
+                    {"id": "rxn_combust_ch4", "name": "Combustion of Methane", "inputs": ["CH4", "O2"], "outputs": ["CO2", "H2O"], "description": "CH₄ + 2O₂ → CO₂ + 2H₂O."},
                 ]
             elif domain == "geometry":
                 raw_rules = [
-                    {"id": "thm_congruence_transitivity", "name": "Transitivity of Congruence", "inputs": ["Congruent(AB, CD)", "Congruent(CD, EF)"], "outputs": ["Congruent(AB, EF)"], "description": "If AB is congruent to CD and CD is congruent to EF, then AB is congruent to EF."},
-                    {"id": "g_perp_sym", "name": "Perpendicular Symmetry", "inputs": ["Perpendicular(d1, d2)"], "outputs": ["Perpendicular(d2, d1)"], "description": "If d1 is perpendicular to d2, then d2 is perpendicular to d1."}
+                    {"id": "geo_congruence_transitive", "name": "Congruence Transitivity", "inputs": ["Congruent(AB,CD)", "Congruent(CD,EF)"], "outputs": ["Congruent(AB,EF)"], "description": "Transitivity of congruence."},
+                    {"id": "geo_perp_symmetry", "name": "Perpendicular Symmetry", "inputs": ["Perpendicular(AB,CD)"], "outputs": ["Perpendicular(CD,AB)"], "description": "Perpendicularity is symmetric."},
+                    {"id": "geo_parallel_transitive", "name": "Parallel Transitivity", "inputs": ["Parallel(a,b)", "Parallel(b,c)"], "outputs": ["Parallel(a,c)"], "description": "Transitivity of parallel lines."},
+                    {"id": "geo_triangle_angle_sum", "name": "Triangle Angle Sum", "inputs": ["Triangle(A,B,C)"], "outputs": ["Equal(Add(Angle(BAC),Angle(ABC),Angle(ACB)),180)"], "description": "Angles of a triangle sum to 180°."},
+                    {"id": "geo_isosceles_base_angles", "name": "Isosceles Base Angles", "inputs": ["Triangle(A,B,C)", "Congruent(AB,AC)"], "outputs": ["Equal(Angle(ABC),Angle(ACB))"], "description": "Base angles of isosceles triangle are equal."},
+                    {"id": "geo_sas_congruence", "name": "SAS Congruence", "inputs": ["Congruent(AB,DE)", "Equal(Angle(BAC),Angle(EDF))", "Congruent(AC,DF)"], "outputs": ["CongruentTriangles(ABC,DEF)"], "description": "Side-Angle-Side congruence."},
+                    {"id": "geo_perp_to_parallel", "name": "Perp to Parallel", "inputs": ["Perpendicular(L,a)", "Parallel(a,b)"], "outputs": ["Perpendicular(L,b)"], "description": "Line perp to one parallel line is perp to the other."},
                 ]
             elif domain == "algebra":
                 raw_rules = [
-                    {"id": "alg_solve", "name": "Basic Linear Solver", "inputs": ["x+2=5", "Subtract(2)"], "outputs": ["x=3"], "description": "Solving simple linear equation by subtraction."},
-                    {"id": "alg_add_prop", "name": "Addition Property", "inputs": ["x-3=10", "Add(3)"], "outputs": ["x=13"], "description": "Adding value to both sides."}
+                    {"id": "alg_sub_two", "name": "Subtraction Property of 2 (Demo)", "inputs": ["x+2=5", "Subtract(2,both_sides)"], "outputs": ["x=3"], "description": "Demo: x+2=5 → x=3."},
+                    {"id": "alg_sub_both_sides", "name": "Subtraction Property of Equality", "inputs": ["Equation(LHS,RHS)", "Subtract(Val)"], "outputs": ["Equation(LHS-Val,RHS-Val)"], "description": "a=b → a-c=b-c."},
+                    {"id": "alg_add_both_sides", "name": "Addition Property of Equality", "inputs": ["Equation(LHS,RHS)", "Add(Val)"], "outputs": ["Equation(LHS+Val,RHS+Val)"], "description": "a=b → a+c=b+c."},
+                    {"id": "alg_distributive", "name": "Distributive Property", "inputs": ["Expression(a*(b+c))"], "outputs": ["Equal(a*(b+c),a*b+a*c)"], "description": "a(b+c) = ab+ac."},
+                    {"id": "alg_square_of_sum", "name": "Square of a Sum", "inputs": ["Expression((a+b)^2)"], "outputs": ["Equal((a+b)^2,a^2+2*a*b+b^2)"], "description": "(a+b)² = a²+2ab+b²."},
+                    {"id": "alg_diff_of_squares", "name": "Difference of Squares", "inputs": ["Expression(a^2-b^2)"], "outputs": ["Equal(a^2-b^2,(a+b)*(a-b))"], "description": "a²-b² = (a+b)(a-b)."},
+                    {"id": "alg_quadratic_formula", "name": "Quadratic Formula", "inputs": ["QuadraticEquation(a*x^2+b*x+c,0)", "NotEqual(a,0)"], "outputs": ["Equal(x,(-b±sqrt(b^2-4*a*c))/(2*a))"], "description": "x = (-b±√(b²-4ac))/(2a)."},
                 ]
             else:
                 raw_rules = []
