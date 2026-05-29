@@ -246,3 +246,37 @@ Omni-IPS is engineered in accordance with strict **SOLID design principles**:
 * **Liskov Substitution Principle (LSP):** All domain parsers extend from `DomainParser` and can be utilized interchangeably by downstream query engines.
 * **Interface Segregation Principle (ISP):** Domain-specific values (e.g., molecular masses in chemistry, coordinate points in geometry) are kept inside the dynamic and extensible `attributes` dictionary of the Pydantic `Fact` class, keeping the central interfaces lightweight.
 * **Dependency Inversion Principle (DIP):** Reasoning engines and data models communicate strictly through abstract model schemas (`Fact`, `Rule`), keeping them decoupled from low-level database operations.
+
+---
+
+## 8. Advanced Phase 3.5 Upgrades: High-Precision NLP Routing & Diagnostic Safeguards
+
+To elevate Omni-IPS to a production-grade, bulletproof hybrid AI system, several key technical upgrades were implemented in **Phase 3.5**, eliminating logical variable binding errors, vector DB query drift, database schema blocks, and explainability hallucinations:
+
+### 1. Model-Agnostic LLM-Driven Structured Semantic Parser
+* **The Problem:** Direct vector similarity search over the entire natural language query was highly inaccurate. Dense embeddings cannot parse strict variable bindings (e.g. mapping `AB, CD, EF` to arbitrary templates), completely failing on multilingual/Vietnamese queries.
+* **The Upgrade:** Rewrote `rag_agent/router.py` to use a LangChain model-agnostic chat instance (`get_llm(temperature=0.0)`) and Pydantic schemas (`ExtractedProblem`) to perform deterministic structural parsing.
+* **Result:** Successfully extracts exact symbolic fact templates (such as algebraic equations, operation predicates like `Subtract(2,both_sides)`, and geometric relations) from both English and Vietnamese query expressions with zero semantic drift.
+
+### 2. Multi-Tier Qdrant L2 Verification System
+* **The Problem:** Fallback vector searches on raw query segments frequently generated weak semantic matches that fell below validation standards, leading to erroneous mappings.
+* **The Upgrade:** Implemented a robust 2-level query resolution mapping pipeline in `map_text_to_graph_fact`:
+    1. **Level 1 (Exact Payload Scroll):** Executes a rapid scroll filter query in Qdrant targeting either the `value` or `label` payload fields of domain partitions. If an exact match is found, it maps directly with zero overhead.
+    2. **Level 2 (High-Confidence Vector Filtering):** If exact matching fails, it falls back to a vector search restricted by a strict threshold condition (`score >= 0.85`), preventing weak matches from leaking into symbolic solvers.
+
+### 3. Dynamic Neo4j Relationship Rule Loader
+* **The Problem:** Ingesting domain data in Neo4j via multiple labels (`MERGE (f:Fact:Geometry ...)`) caused constraint errors if a node already existed as a `:Fact` but lacked the domain label. Additionally, pulling rule lists directly from node properties caused `NoneType` iterable join exceptions.
+* **The Upgrade:** 
+    * Refactored ETL scripts (`ingest_*.py`) to perform singular `MERGE (f:Fact {value: row.value, domain: row.domain})` followed by dedicated `SET f:Domain` Cypher execution.
+    * Upgraded API queries to dynamically collect rule preconditions and deductions at runtime from active relationships (`HAS_INPUT` and `HAS_OUTPUT`) with Python-level fallback safety buffers.
+
+### 4. Failed Proof Diagnostic & Pedagogical Explainer
+* **The Problem:** The explainability agent assumed that every trace submitted resulted in a successful proof. If a solver failed (`goal_reached = False`), the LLM would hallucinate a fictional path to "prove" the impossible.
+* **The Upgrade:** 
+    * Extended the `ExplainRequest` API schema and front-end state machinery to pass `goal_reached` directly.
+    * Forked `/api/explain` into two distinct cognitive modes: **Success Flow** (rich educational walkthrough of the successful trace) and **Failure Diagnostics Flow** (pedagogical analysis showing mapped facts, steps executed before saturation, and a mathematical analysis explaining the exact logical gap / missing theorems with constructive fixes).
+
+### 5. Seamless Streamlit Hot-Reloading
+* **The Problem:** Modifying Streamlit scripts (`ui/app.py`) on the host did not sync to the running UI container because the frontend service ran in isolated context without direct mapping.
+* **The Upgrade:** Configured volume mapping (`- .:/app`) inside `docker-compose.yml` for the frontend service, enabling live hot-reloading of UI features alongside backend developments.
+
