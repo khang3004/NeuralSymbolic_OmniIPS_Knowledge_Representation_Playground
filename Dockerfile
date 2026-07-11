@@ -17,8 +17,9 @@ COPY pyproject.toml uv.lock ./
 ENV UV_PROJECT_ENVIRONMENT=/venv
 
 # Synchronize dependencies with uv (frozen to lock down dependencies, no-dev to keep it light)
-# Since package = false in tool.uv, it won't try to build this app as a package.
-RUN uv sync --frozen --no-dev --no-install-project
+# Force PyTorch CPU wheel download to skip GBs of unnecessary CUDA dependencies
+RUN uv sync --frozen --no-dev --no-install-project --extra-index-url https://download.pytorch.org/whl/cpu
+
 
 # Copy remaining code files
 COPY . .

@@ -2,16 +2,16 @@
 import os
 import sys
 import logging
-from typing import List, Dict, Any
 from dotenv import load_dotenv
 
 # Allow imports from project root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from graph_db.connection import Neo4jConnection
-from qdrant_client import QdrantClient
+from graph_db.qdrant_factory import get_qdrant_client
 from qdrant_client.models import PointStruct
 from sentence_transformers import SentenceTransformer
+from data_pipelines.variable_rules import VARIABLE_GEOMETRY_RULES
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -364,10 +364,7 @@ GEOMETRY_KNOWLEDGE = [
 class GeometryIngest:
     def __init__(self):
         self.neo4j_conn = Neo4jConnection()
-        self.qdrant_client = QdrantClient(
-            host=os.getenv("QDRANT_HOST", "localhost"),
-            port=int(os.getenv("QDRANT_PORT", 6333))
-        )
+        self.qdrant_client = get_qdrant_client()
         self.embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 
     def load_to_neo4j(self):
@@ -411,6 +408,25 @@ class GeometryIngest:
                 MERGE (r)-[:HAS_OUTPUT]->(f_out)
             """, batch=GEOMETRY_KNOWLEDGE, domain=DOMAIN)
 
+        # Seed variable (FOL fragment) rules — marked with has_variables=true
+        logger.info("Loading %d variable geometry rules into Neo4j...", len(VARIABLE_GEOMETRY_RULES))
+        var_rules_prepared = [
+            {**r, "has_variables": True} for r in VARIABLE_GEOMETRY_RULES
+        ]
+        with self.neo4j_conn.get_session() as session:
+            session.run("""
+                UNWIND $batch AS row
+                MERGE (r:Rule {id: row.id, domain: $domain})
+                ON CREATE SET r.name = row.name, r.description = row.description,
+                              r.inputs = row.inputs, r.outputs = row.outputs,
+                              r.has_variables = row.has_variables
+                ON MATCH  SET r.name = row.name, r.description = row.description,
+                              r.inputs = row.inputs, r.outputs = row.outputs,
+                              r.has_variables = row.has_variables
+                SET r:Geometry
+            """, batch=var_rules_prepared, domain=DOMAIN)
+        logger.info("Variable rules loaded.")
+
     def load_to_qdrant(self):
         logger.info("Loading Geometry facts to Qdrant...")
         all_facts = set()
@@ -448,12 +464,23 @@ class GeometryIngest:
         
         logger.info("Total geometry facts loaded to Qdrant: %d", len(points))
 
+    def close(self):
+        self.neo4j_conn.close()
+
     def run(self):
         self.load_to_neo4j()
         self.load_to_qdrant()
-        logger.info("✅ Geometry ingestion complete. %d rules, %d unique facts.",
-                     len(GEOMETRY_KNOWLEDGE),
-                     len(set(f for r in GEOMETRY_KNOWLEDGE for f in r["inputs"] + r["outputs"])))
+        total_var = len(VARIABLE_GEOMETRY_RULES)
+        total_prop = len(GEOMETRY_KNOWLEDGE)
+        total_facts = len(set(f for r in GEOMETRY_KNOWLEDGE for f in r["inputs"] + r["outputs"]))
+        logger.info(
+            "✅ Geometry ingestion complete. %d propositional rules + %d variable rules, %d unique facts.",
+            total_prop, total_var, total_facts
+        )
 
 if __name__ == "__main__":
-    GeometryIngest().run()
+    ingestor = GeometryIngest()
+    try:
+        ingestor.run()
+    finally:
+        ingestor.close()

@@ -1,152 +1,158 @@
 # ==============================================================================
-#                 Omni-IPS (Omni-domain Intelligent Problem Solver)
-#                        Unified Operational Makefile
+#                GeoIPS — Plane Geometry Intelligent Problem Solver
+#                         Unified Operational Makefile
 # ==============================================================================
 # Powered by Astral 'uv' Package Manager & Docker Containerization
 # ==============================================================================
 
-.PHONY: help setup setup-schema test test-rag ingest-chemistry ingest-geometry ingest-algebra ingest-all embed-knowledge docker-up docker-down docker-logs docker-status run-server run-ui run-legacy-demo clean
+.PHONY: help setup setup-schema test test-unifier test-rag ingest-geometry ingest-expert ingest-formalgeo ingest-ontology ingest-all embed-knowledge docker-up docker-down docker-logs docker-status run-server run-ui clean
 
-# Shell Configuration
 SHELL := /bin/bash
-UV := $(shell which uv 2>/dev/null)
+UV    := $(shell which uv 2>/dev/null)
 
-# Color Outputs
-COLOR_RESET   = \033[0m
-COLOR_BOLD    = \033[1m
-COLOR_GREEN   = \033[32m
-COLOR_BLUE    = \033[34m
-COLOR_CYAN    = \033[36m
-COLOR_YELLOW  = \033[33m
-COLOR_RED     = \033[31m
+COLOR_RESET  = \033[0m
+COLOR_BOLD   = \033[1m
+COLOR_GREEN  = \033[32m
+COLOR_BLUE   = \033[34m
+COLOR_CYAN   = \033[36m
+COLOR_YELLOW = \033[33m
+COLOR_RED    = \033[31m
 
-# Defaults
 PORT ?= 8080
 HOST ?= 0.0.0.0
 
 help:
 	@echo -e "$(COLOR_BOLD)$(COLOR_CYAN)========================================================================$(COLOR_RESET)"
-	@echo -e "$(COLOR_BOLD)$(COLOR_GREEN)            Omni-IPS Unified Operation Command Panel (uv-Powered)      $(COLOR_RESET)"
+	@echo -e "$(COLOR_BOLD)$(COLOR_GREEN)          GeoIPS — Plane Geometry IPS Command Panel (uv-Powered)      $(COLOR_RESET)"
 	@echo -e "$(COLOR_BOLD)$(COLOR_CYAN)========================================================================$(COLOR_RESET)"
 	@echo -e "$(COLOR_BOLD)Environment Status:$(COLOR_RESET)"
 	@if [ -z "$(UV)" ]; then \
-		echo -e "  uv Package Manager: $(COLOR_RED)NOT FOUND$(COLOR_RESET) (Please install uv first)"; \
+		echo -e "  uv Package Manager: $(COLOR_RED)NOT FOUND$(COLOR_RESET)"; \
 	else \
 		echo -e "  uv Package Manager: $(COLOR_GREEN)FOUND$(COLOR_RESET) ($(shell uv --version))"; \
 	fi
 	@echo -e ""
-	@echo -e "$(COLOR_BOLD)1. Setup & Package Management:$(COLOR_RESET)"
-	@echo -e "  $(COLOR_CYAN)make setup$(COLOR_RESET)                - Install dependencies & synchronize virtual environment (.venv) using uv"
-	@echo -e "  $(COLOR_CYAN)make setup-schema$(COLOR_RESET)         - Initialize Neo4j constraints and Qdrant collections"
-	@echo -e "  $(COLOR_CYAN)make clean$(COLOR_RESET)                - Remove cached files, pycache, and virtual environment"
+	@echo -e "$(COLOR_BOLD)1. Setup:$(COLOR_RESET)"
+	@echo -e "  $(COLOR_CYAN)make setup$(COLOR_RESET)              - Install dependencies via uv"
+	@echo -e "  $(COLOR_CYAN)make setup-schema$(COLOR_RESET)       - Initialize Neo4j constraints"
+	@echo -e "  $(COLOR_CYAN)make clean$(COLOR_RESET)              - Remove caches and .venv"
 	@echo -e ""
-	@echo -e "$(COLOR_BOLD)2. Testing & Verification:$(COLOR_RESET)"
-	@echo -e "  $(COLOR_CYAN)make test$(COLOR_RESET)                 - Run the multi-domain symbolic engine verification tests"
-	@echo -e "  $(COLOR_CYAN)make test-rag$(COLOR_RESET)             - Run the GraphRAG pipeline and explainability agent verification tests"
+	@echo -e "$(COLOR_BOLD)2. Testing:$(COLOR_RESET)"
+	@echo -e "  $(COLOR_CYAN)make test-unifier$(COLOR_RESET)       - Run unifier & solver unit tests (Phase 3)"
+	@echo -e "  $(COLOR_CYAN)make test$(COLOR_RESET)               - Run all pytest tests"
+	@echo -e "  $(COLOR_CYAN)make test-rag$(COLOR_RESET)           - Run GraphRAG pipeline integration tests"
 	@echo -e ""
-	@echo -e "$(COLOR_BOLD)3. ETL Pipelines & Ingestion (Neo4j & Qdrant):$(COLOR_RESET)"
-	@echo -e "  $(COLOR_CYAN)make ingest-chemistry$(COLOR_RESET)     - Extract from Wikidata (Massive) + ingest into Neo4j/Qdrant"
-	@echo -e "  $(COLOR_CYAN)make ingest-geometry$(COLOR_RESET)      - Ingest Axiomatic Euclidean geometry theorems into Neo4j/Qdrant"
-	@echo -e "  $(COLOR_CYAN)make ingest-algebra$(COLOR_RESET)       - Ingest Algebraic axioms and properties into Neo4j/Qdrant"
-	@echo -e "  $(COLOR_CYAN)make ingest-all$(COLOR_RESET)           - Run Chemistry, Geometry, and Algebra ETL ingestion pipelines"
-	@echo -e "  $(COLOR_CYAN)make embed-knowledge$(COLOR_RESET)      - Populate Qdrant Vector Database from Neo4j (Legacy Support)"
+	@echo -e "$(COLOR_BOLD)3. Knowledge Base Ingestion:$(COLOR_RESET)"
+	@echo -e "  $(COLOR_CYAN)make ingest-geometry$(COLOR_RESET)    - Ingest Euclidean geometry theorems + variable rules"
+	@echo -e "  $(COLOR_CYAN)make ingest-expert$(COLOR_RESET)      - Ingest AlphaGeometry/FormalGeo expert theorems"
+	@echo -e "  $(COLOR_CYAN)make ingest-formalgeo$(COLOR_RESET)   - Ingest 196+ FormalGeo logic rules"
+	@echo -e "  $(COLOR_CYAN)make ingest-ontology$(COLOR_RESET)    - Load OWL class hierarchy into Neo4j"
+	@echo -e "  $(COLOR_CYAN)make ingest-all$(COLOR_RESET)         - Run all ingestion pipelines (geometry + expert + formalgeo + ontology)"
+	@echo -e "  $(COLOR_CYAN)make embed-knowledge$(COLOR_RESET)    - Populate Qdrant from Neo4j"
 	@echo -e ""
-	@echo -e "$(COLOR_BOLD)4. API Server & Execution:$(COLOR_RESET)"
-	@echo -e "  $(COLOR_CYAN)make run-server$(COLOR_RESET)           - Launch FastAPI Gateway locally (Port: $(PORT), Host: $(HOST))"
-	@echo -e "  $(COLOR_CYAN)make run-ui$(COLOR_RESET)               - Launch Streamlit Chat UI locally (Port: 8501)"
-	@echo -e "  $(COLOR_CYAN)make run-legacy-demo$(COLOR_RESET)      - Run legacy forward-chaining CLI demo (Na + H2O -> NaOH)"
+
+
+	@echo -e "$(COLOR_BOLD)4. Run:$(COLOR_RESET)"
+	@echo -e "  $(COLOR_CYAN)make run-server$(COLOR_RESET)         - Launch FastAPI server on http://$(HOST):$(PORT)"
+	@echo -e "  $(COLOR_CYAN)make run-ui$(COLOR_RESET)             - Launch Streamlit UI on http://localhost:8501"
 	@echo -e ""
-	@echo -e "$(COLOR_BOLD)5. Docker Infrastructure:$(COLOR_RESET)"
-	@echo -e "  $(COLOR_CYAN)make docker-up$(COLOR_RESET)            - Build and launch Neo4j, Qdrant, Backend, and Frontend containers"
-	@echo -e "  $(COLOR_CYAN)make docker-down$(COLOR_RESET)          - Shut down docker compose services and release ports"
-	@echo -e "  $(COLOR_CYAN)make docker-status$(COLOR_RESET)        - View status of docker compose services"
-	@echo -e "  $(COLOR_CYAN)make docker-logs$(COLOR_RESET)          - Tail live logs from all docker compose containers"
+	@echo -e "$(COLOR_BOLD)5. Docker:$(COLOR_RESET)"
+	@echo -e "  $(COLOR_CYAN)make docker-up$(COLOR_RESET)          - Build & start Neo4j + Backend + Frontend"
+	@echo -e "  $(COLOR_CYAN)make docker-down$(COLOR_RESET)        - Shut down all containers"
+	@echo -e "  $(COLOR_CYAN)make docker-status$(COLOR_RESET)      - View container status"
+	@echo -e "  $(COLOR_CYAN)make docker-logs$(COLOR_RESET)        - Tail container logs"
 	@echo -e "$(COLOR_BOLD)$(COLOR_CYAN)========================================================================$(COLOR_RESET)"
 
 setup:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Validating and setting up Python environment via uv...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Setting up Python environment via uv...$(COLOR_RESET)"
 	@if [ -z "$(UV)" ]; then \
-		echo -e "$(COLOR_YELLOW)[WARNING] 'uv' is not installed or not in PATH.$(COLOR_RESET)"; \
-		echo -e "Installing uv now..."; \
+		echo -e "$(COLOR_YELLOW)[WARNING] 'uv' not found. Installing...$(COLOR_RESET)"; \
 		curl -LsSf https://astral.sh/uv/install.sh | sh; \
 		export PATH="$$HOME/.local/bin:$$PATH"; \
 	fi
 	@uv sync
-	@echo -e "$(COLOR_GREEN)[Omni-IPS] Setup complete. Virtual environment ready in '.venv/'.$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)[GeoIPS] Setup complete. Virtual environment ready in '.venv/'.$(COLOR_RESET)"
 
 setup-schema:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Initializing database schema and collections...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Initializing Neo4j constraints...$(COLOR_RESET)"
 	@uv run python data_pipelines/setup_schema.py
 
 test:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Running multi-domain integration & verification tests...$(COLOR_RESET)"
-	@uv run python tests/verify_scaffold.py
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Running all pytest tests...$(COLOR_RESET)"
+	@uv run pytest tests/ -v
+
+test-unifier:
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Running Unifier & Variable Binding tests (Phase 3)...$(COLOR_RESET)"
+	@uv run pytest tests/test_unifier.py -v
 
 test-rag:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Running GraphRAG & Explainability pipeline integration tests...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Running GraphRAG pipeline integration tests...$(COLOR_RESET)"
 	@uv run python tests/verify_rag.py
 
-ingest-chemistry:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Starting Chemistry ETL pipeline (Mass Extraction)...$(COLOR_RESET)"
-	@uv run python data_pipelines/ingest_chemistry.py
-
 ingest-geometry:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Starting Geometry ETL pipeline (Euclidean Axioms)...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Ingesting Euclidean geometry theorems + variable rules...$(COLOR_RESET)"
 	@uv run python data_pipelines/ingest_geometry.py
+	@echo -e "$(COLOR_GREEN)[GeoIPS] Geometry ingestion complete.$(COLOR_RESET)"
 
-ingest-algebra:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Starting Algebra ETL pipeline (Algebraic Axioms)...$(COLOR_RESET)"
-	@uv run python data_pipelines/ingest_algebra.py
+ingest-expert:
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Ingesting AlphaGeometry/FormalGeo expert theorems...$(COLOR_RESET)"
+	@uv run python data_pipelines/ingest_expert_rules.py
+	@echo -e "$(COLOR_GREEN)[GeoIPS] Expert rules ingestion complete.$(COLOR_RESET)"
+
+ingest-formalgeo:
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Ingesting FormalGeo GDL theorems into Neo4j + Qdrant Cloud...$(COLOR_RESET)"
+	@uv run python data_pipelines/ingest_formalgeo_rules.py
+	@echo -e "$(COLOR_GREEN)[GeoIPS] FormalGeo theorems ingestion complete.$(COLOR_RESET)"
+
+ingest-ontology:
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Loading OWL geometry ontology into Neo4j...$(COLOR_RESET)"
+	@uv run python data_pipelines/ingest_ontology.py
+	@echo -e "$(COLOR_GREEN)[GeoIPS] Ontology ingestion complete.$(COLOR_RESET)"
 
 ingest-all:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Triggering comprehensive database ingestion (Chem + Geo + Alg)...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Running all ingestion pipelines...$(COLOR_RESET)"
 	@uv run python data_pipelines/setup_schema.py
-	@uv run python data_pipelines/ingest_chemistry.py
 	@uv run python data_pipelines/ingest_geometry.py
-	@uv run python data_pipelines/ingest_algebra.py
-	@echo -e "$(COLOR_GREEN)[Omni-IPS] All ETL pipelines executed successfully. Databases populated.$(COLOR_RESET)"
+	@uv run python data_pipelines/ingest_expert_rules.py
+	@uv run python data_pipelines/ingest_formalgeo_rules.py
+	@uv run python data_pipelines/ingest_ontology.py
+	@echo -e "$(COLOR_GREEN)[GeoIPS] All ingestion pipelines complete.$(COLOR_RESET)"
+
+
 
 embed-knowledge:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Populating Qdrant Vector Database from Neo4j Knowledge Graph...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Populating Qdrant Vector DB from Neo4j...$(COLOR_RESET)"
 	@uv run python rag_agent/embed_knowledge.py
 
 run-server:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Launching local FastAPI Gateway server at http://$(HOST):$(PORT)...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Launching FastAPI server at http://$(HOST):$(PORT)...$(COLOR_RESET)"
 	@uv run uvicorn api.main:app --reload --host $(HOST) --port $(PORT)
 
 run-ui:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Launching Streamlit Chat UI at http://localhost:8501...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Launching Streamlit UI at http://localhost:8501...$(COLOR_RESET)"
 	@uv run streamlit run ui/app.py --server.port 8501
 
-run-legacy-demo:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Executing legacy forward chaining CLI logic...$(COLOR_RESET)"
-	@uv run python src/main.py --kb src/knowledge_base.json --facts Na H2O --goal NaOH
-
 docker-up:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] orchestrating containerized infrastructure (Neo4j + Qdrant + Backend + Frontend)...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Starting containerized infrastructure (Neo4j + Backend + Frontend)...$(COLOR_RESET)"
 	docker compose up --build -d
-	@echo -e "$(COLOR_GREEN)[Omni-IPS] Infrastructure successfully launched.$(COLOR_RESET)"
-	@echo -e "  - Neo4j Browser:    http://localhost:7474 (user: neo4j / pass: omni_ips_password)"
-	@echo -e "  - FastAPI docs:     http://localhost:8080/docs"
-	@echo -e "  - Qdrant Dashboard: http://localhost:6333/dashboard"
-	@echo -e "  - Streamlit UI:     http://localhost:8501"
+	@echo -e "$(COLOR_GREEN)[GeoIPS] Infrastructure launched.$(COLOR_RESET)"
+	@echo -e "  - Neo4j Browser: http://localhost:7474  (neo4j / geo_ips_password)"
+	@echo -e "  - FastAPI docs:  http://localhost:8080/docs"
+	@echo -e "  - Streamlit UI:  http://localhost:8501"
 
 docker-down:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Shutting down docker infrastructure...$(COLOR_RESET)"
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Shutting down containers...$(COLOR_RESET)"
 	docker compose down
-	@echo -e "$(COLOR_GREEN)[Omni-IPS] All containerized services halted.$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)[GeoIPS] All containers stopped.$(COLOR_RESET)"
 
 docker-status:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Retrieving status of containerized services...$(COLOR_RESET)"
 	docker compose ps
 
 docker-logs:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Tailing container logs...$(COLOR_RESET)"
 	docker compose logs -f
 
 clean:
-	@echo -e "$(COLOR_BLUE)[Omni-IPS] Cleaning up workspace artifacts, virtual env, and caches...$(COLOR_RESET)"
-	@rm -rf __pycache__ src/__pycache__ core_engine/__pycache__ domains/__pycache__ domains/*/__pycache__ graph_db/__pycache__ tests/__pycache__ data_pipelines/__pycache__ api/__pycache__
+	@echo -e "$(COLOR_BLUE)[GeoIPS] Cleaning caches and build artifacts...$(COLOR_RESET)"
+	@find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
 	@rm -rf .venv .uv .pytest_cache
-	@rm -f engine.py main.py knowledge_base.json
-	@echo -e "$(COLOR_GREEN)[Omni-IPS] Cleanup completed.$(COLOR_RESET)"
+	@echo -e "$(COLOR_GREEN)[GeoIPS] Cleanup complete.$(COLOR_RESET)"

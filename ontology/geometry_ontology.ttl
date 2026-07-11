@@ -1,0 +1,194 @@
+@prefix geo: <http://geoips.edu.vn/ontology/geometry#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ===========================================================================
+# GeoIPS Plane Geometry Ontology (OWL Lite)
+# Covers the Euclidean plane geometry class hierarchy for high-school level.
+# ===========================================================================
+
+<http://geoips.edu.vn/ontology/geometry> a owl:Ontology ;
+    rdfs:label "GeoIPS Plane Geometry Ontology" ;
+    rdfs:comment "OWL Lite taxonomy for plane geometry concepts used in GeoIPS." .
+
+# ---------------------------------------------------------------------------
+# Top-level
+# ---------------------------------------------------------------------------
+
+geo:GeometricObject a owl:Class ;
+    rdfs:label "Geometric Object" ;
+    rdfs:comment "The root class of all geometric entities." .
+
+# ---------------------------------------------------------------------------
+# Shapes
+# ---------------------------------------------------------------------------
+
+geo:Shape a owl:Class ;
+    rdfs:subClassOf geo:GeometricObject ;
+    rdfs:label "Shape" .
+
+geo:Polygon a owl:Class ;
+    rdfs:subClassOf geo:Shape ;
+    rdfs:label "Polygon" ;
+    rdfs:comment "A closed plane figure bounded by straight line segments." .
+
+geo:Circle a owl:Class ;
+    rdfs:subClassOf geo:Shape ;
+    rdfs:label "Circle" ;
+    rdfs:comment "The set of all points equidistant from a center point." .
+
+# ---------------------------------------------------------------------------
+# Polygons → Triangles
+# ---------------------------------------------------------------------------
+
+geo:Triangle a owl:Class ;
+    rdfs:subClassOf geo:Polygon ;
+    rdfs:label "Triangle" ;
+    rdfs:comment "A three-sided polygon. The sum of interior angles is 180°." .
+
+geo:RightTriangle a owl:Class ;
+    rdfs:subClassOf geo:Triangle ;
+    rdfs:label "Right Triangle" ;
+    rdfs:comment "A triangle containing one 90° angle." .
+
+geo:IsoscelesTriangle a owl:Class ;
+    rdfs:subClassOf geo:Triangle ;
+    rdfs:label "Isosceles Triangle" ;
+    rdfs:comment "A triangle with at least two congruent sides." .
+
+geo:EquilateralTriangle a owl:Class ;
+    rdfs:subClassOf geo:IsoscelesTriangle ;
+    rdfs:label "Equilateral Triangle" ;
+    rdfs:comment "A triangle with all three sides congruent. All angles equal 60°." .
+
+geo:ScaleneTriangle a owl:Class ;
+    rdfs:subClassOf geo:Triangle ;
+    rdfs:label "Scalene Triangle" ;
+    rdfs:comment "A triangle with no congruent sides." .
+
+# ---------------------------------------------------------------------------
+# Polygons → Quadrilaterals
+# ---------------------------------------------------------------------------
+
+geo:Quadrilateral a owl:Class ;
+    rdfs:subClassOf geo:Polygon ;
+    rdfs:label "Quadrilateral" ;
+    rdfs:comment "A four-sided polygon." .
+
+geo:Trapezoid a owl:Class ;
+    rdfs:subClassOf geo:Quadrilateral ;
+    rdfs:label "Trapezoid" ;
+    rdfs:comment "A quadrilateral with exactly one pair of parallel sides." .
+
+geo:IsoscelesTrapezoid a owl:Class ;
+    rdfs:subClassOf geo:Trapezoid ;
+    rdfs:label "Isosceles Trapezoid" ;
+    rdfs:comment "A trapezoid whose non-parallel sides are congruent." .
+
+geo:Parallelogram a owl:Class ;
+    rdfs:subClassOf geo:Quadrilateral ;
+    rdfs:label "Parallelogram" ;
+    rdfs:comment "A quadrilateral with two pairs of parallel sides. Opposite sides are equal." .
+
+geo:Rectangle a owl:Class ;
+    rdfs:subClassOf geo:Parallelogram ;
+    rdfs:label "Rectangle" ;
+    rdfs:comment "A parallelogram with four right angles." .
+
+geo:Rhombus a owl:Class ;
+    rdfs:subClassOf geo:Parallelogram ;
+    rdfs:label "Rhombus" ;
+    rdfs:comment "A parallelogram with four congruent sides." .
+
+geo:Square a owl:Class ;
+    rdfs:subClassOf geo:Rectangle, geo:Rhombus ;
+    rdfs:label "Square" ;
+    rdfs:comment "A rectangle that is also a rhombus — four right angles and four congruent sides." .
+
+# ---------------------------------------------------------------------------
+# Lines
+# ---------------------------------------------------------------------------
+
+geo:Line a owl:Class ;
+    rdfs:subClassOf geo:GeometricObject ;
+    rdfs:label "Line" ;
+    rdfs:comment "An infinite straight one-dimensional figure." .
+
+geo:Ray a owl:Class ;
+    rdfs:subClassOf geo:Line ;
+    rdfs:label "Ray" ;
+    rdfs:comment "A line starting from an endpoint and extending infinitely in one direction." .
+
+geo:Segment a owl:Class ;
+    rdfs:subClassOf geo:Line ;
+    rdfs:label "Segment" ;
+    rdfs:comment "A finite portion of a line bounded by two endpoints." .
+
+# ---------------------------------------------------------------------------
+# Angles
+# ---------------------------------------------------------------------------
+
+geo:Angle a owl:Class ;
+    rdfs:subClassOf geo:GeometricObject ;
+    rdfs:label "Angle" ;
+    rdfs:comment "The figure formed by two rays sharing a common endpoint (vertex)." .
+
+geo:AcuteAngle a owl:Class ;
+    rdfs:subClassOf geo:Angle ;
+    rdfs:label "Acute Angle" ;
+    rdfs:comment "An angle measuring strictly between 0° and 90°." .
+
+geo:RightAngle a owl:Class ;
+    rdfs:subClassOf geo:Angle ;
+    rdfs:label "Right Angle" ;
+    rdfs:comment "An angle measuring exactly 90°." .
+
+geo:ObtuseAngle a owl:Class ;
+    rdfs:subClassOf geo:Angle ;
+    rdfs:label "Obtuse Angle" ;
+    rdfs:comment "An angle measuring strictly between 90° and 180°." .
+
+geo:StraightAngle a owl:Class ;
+    rdfs:subClassOf geo:Angle ;
+    rdfs:label "Straight Angle" ;
+    rdfs:comment "An angle measuring exactly 180°." .
+
+geo:ReflexAngle a owl:Class ;
+    rdfs:subClassOf geo:Angle ;
+    rdfs:label "Reflex Angle" ;
+    rdfs:comment "An angle measuring strictly between 180° and 360°." .
+
+# ---------------------------------------------------------------------------
+# Points
+# ---------------------------------------------------------------------------
+
+geo:Point a owl:Class ;
+    rdfs:subClassOf geo:GeometricObject ;
+    rdfs:label "Point" ;
+    rdfs:comment "A zero-dimensional location in the plane." .
+
+geo:Midpoint a owl:Class ;
+    rdfs:subClassOf geo:Point ;
+    rdfs:label "Midpoint" ;
+    rdfs:comment "The point that divides a segment into two equal halves." .
+
+geo:Centroid a owl:Class ;
+    rdfs:subClassOf geo:Point ;
+    rdfs:label "Centroid" ;
+    rdfs:comment "The point where the three medians of a triangle meet." .
+
+geo:Circumcenter a owl:Class ;
+    rdfs:subClassOf geo:Point ;
+    rdfs:label "Circumcenter" ;
+    rdfs:comment "The point equidistant from all three vertices of a triangle (center of circumcircle)." .
+
+geo:Incenter a owl:Class ;
+    rdfs:subClassOf geo:Point ;
+    rdfs:label "Incenter" ;
+    rdfs:comment "The point equidistant from all three sides of a triangle (center of incircle)." .
+
+geo:Orthocenter a owl:Class ;
+    rdfs:subClassOf geo:Point ;
+    rdfs:label "Orthocenter" ;
+    rdfs:comment "The point where the three altitudes of a triangle meet." .

@@ -11,7 +11,8 @@ COPY --from=ghcr.io/astral-sh/uv:0.7.9 /uv /uvx /bin/
 ENV UV_PROJECT_ENVIRONMENT=/venv
 
 # Synchronize all dependencies (includes streamlit)
-RUN uv sync --frozen --no-dev --no-install-project
+# Force PyTorch CPU wheel download to skip CUDA packages
+RUN uv sync --frozen --no-dev --no-install-project --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Copy application code
 COPY . .

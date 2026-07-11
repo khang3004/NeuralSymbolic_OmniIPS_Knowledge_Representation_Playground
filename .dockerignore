@@ -1,0 +1,36 @@
+# Git and metadata
+.git
+.gitignore
+README.md
+
+# Virtual environments
+.venv
+venv
+ENV
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.ipynb_checkpoints
+
+# Hugging Face caches / model weights
+.cache/
+huggingface/
+.huggingface/
+
+# Local databases & persistent data volumes (Crucial!)
+data/
+qdrant_data/
+neo4j_data/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker compose files
+docker-compose.override.yml
