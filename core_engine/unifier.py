@@ -104,6 +104,16 @@ def unify_expressions(pattern: str, fact: str) -> Optional[Dict[str, str]]:
     if not has_variables(pattern):
         return {} if pattern == fact else None
 
+    # Check for composite variables (e.g. "?A?B" matching "AB")
+    vars_found = re.findall(r"\?[A-Za-z0-9_]+", pattern)
+    if len(vars_found) > 1 and "".join(vars_found) == pattern:
+        if len(vars_found) == len(fact):
+            binding = {}
+            for var, val in zip(vars_found, fact):
+                binding[var] = val
+            return binding
+        return None
+
     # Both are atoms (no parentheses) — direct comparison or variable bind
     pat_parsed = _parse_predicate(pattern)
     fct_parsed = _parse_predicate(fact)
@@ -211,7 +221,13 @@ def find_rule_bindings(
             partially_instantiated = apply_binding(pattern, current_binding)
 
             # Try every WM fact as a candidate match
+            pat_functor = partially_instantiated.split('(')[0]
             for candidate in wm_values:
+                # Fast functor mismatch check
+                if not pat_functor.startswith('?'):
+                    cand_functor = candidate.split('(')[0]
+                    if pat_functor != cand_functor:
+                        continue
                 sub = unify_expressions(partially_instantiated, candidate)
                 if sub is not None:
                     # Merge sub into current_binding — check for conflicts

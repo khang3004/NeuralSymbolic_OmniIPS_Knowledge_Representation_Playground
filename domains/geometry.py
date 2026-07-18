@@ -13,15 +13,14 @@ class GeometryParser(DomainParser):
         return "geometry"
 
     def parse_fact(self, raw_input: str, fact_id: str) -> Fact:
-        cleaned = raw_input.replace(" ", "")
+        from core_engine.arithmetic_evaluator import canonicalize
+        canonical_val = canonicalize(raw_input)
         
-        # Safe extraction of outer relation and balanced inner content
-        first_paren = cleaned.find("(")
-        if first_paren != -1 and cleaned.endswith(")"):
-            relation = cleaned[:first_paren]
-            inner_content = cleaned[first_paren+1:-1]
+        first_paren = canonical_val.find("(")
+        if first_paren != -1 and canonical_val.endswith(")"):
+            relation = canonical_val[:first_paren]
+            inner_content = canonical_val[first_paren+1:-1]
             
-            # Split by comma only at the top-level (level 0) of parenthesis nesting
             args = []
             current_arg = []
             paren_level = 0
@@ -37,18 +36,9 @@ class GeometryParser(DomainParser):
                     current_arg.append(char)
             if current_arg:
                 args.append("".join(current_arg).strip())
-                
-            # For commutative geometric relations, sort arguments
-            commutative_relations = {"Congruent", "Similar", "Parallel", "Intersect"}
-            if relation in commutative_relations:
-                sorted_args = sorted(args)
-                canonical_val = f"{relation}({','.join(sorted_args)})"
-            else:
-                canonical_val = f"{relation}({','.join(args)})"
         else:
             relation = "Atom"
-            args = [cleaned]
-            canonical_val = cleaned
+            args = [canonical_val]
 
         return Fact(
             id=fact_id,
@@ -56,6 +46,7 @@ class GeometryParser(DomainParser):
             domain=self.domain_name,
             attributes={"relation": relation, "args": args}
         )
+
 
     def parse_rule(self, raw_rule: dict) -> Rule:
         rule_id = raw_rule["id"]

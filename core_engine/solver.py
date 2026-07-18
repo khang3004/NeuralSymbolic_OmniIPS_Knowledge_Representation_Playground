@@ -40,7 +40,13 @@ class ForwardChainingEngine:
     def __init__(self, rules: List[Rule]):
         self.rules = rules
 
-    def solve(self, initial_facts: List[Fact], goal: Optional[Fact] = None) -> InferenceResult:
+    def solve(
+        self,
+        initial_facts: List[Fact],
+        goal: Optional[Fact] = None,
+        max_iterations: int = 15,
+        max_facts: int = 800,
+    ) -> InferenceResult:
         working_memory: Set[Fact] = set(initial_facts)
         applied_rule_ids: List[str] = []
         execution_trace: List[ExecutionStep] = []
@@ -51,11 +57,35 @@ class ForwardChainingEngine:
         def _wm_values() -> List[str]:
             return [f.value for f in working_memory]
 
+        def _goal_aliases(goal_value: str) -> list:
+            """
+            Return a list of semantically equivalent goal predicate strings.
+            Handles cases where LLM and solver use different predicate names for
+            the same concept (e.g. CongruentTriangles ↔ Congruent for triangles).
+            """
+            aliases = [goal_value]
+            import re
+            # CongruentTriangles(ABC,DEF) ↔ Congruent(ABC,DEF)
+            m = re.match(r"CongruentTriangles\(([A-Z]{3}),([A-Z]{3})\)", goal_value)
+            if m:
+                aliases.append(f"Congruent({m.group(1)},{m.group(2)})")
+            m2 = re.match(r"Congruent\(([A-Z]{3}),([A-Z]{3})\)", goal_value)
+            if m2:
+                aliases.append(f"CongruentTriangles({m2.group(1)},{m2.group(2)})")
+            # SimilarTriangles(ABC,DEF) ↔ Similar(ABC,DEF)
+            m3 = re.match(r"SimilarTriangles\(([A-Z]{3}),([A-Z]{3})\)", goal_value)
+            if m3:
+                aliases.append(f"Similar({m3.group(1)},{m3.group(2)})")
+            return aliases
+
         def _check_goal() -> bool:
             if not goal:
                 return False
-            if goal in working_memory:
-                return True
+            # Check all alias forms of the goal against working memory
+            wm_vals = {f.value for f in working_memory}
+            for alias in _goal_aliases(goal.value):
+                if alias in wm_vals:
+                    return True
             # Numeric equivalence check (e.g. Equal(Angle(ACB),50) via registry)
             return check_numeric_goal(goal.value, _wm_values(), arith.registry)
 
@@ -87,7 +117,9 @@ class ForwardChainingEngine:
             )
 
         changed = True
-        while changed:
+        iteration = 0
+        while changed and iteration < max_iterations and len(working_memory) < max_facts:
+            iteration += 1
             changed = False
             for rule in self.rules:
                 bindings = find_rule_bindings(rule, working_memory)
@@ -96,6 +128,8 @@ class ForwardChainingEngine:
 
                 for binding in bindings:
                     consequents = instantiate_consequents(rule, binding, rule.domain)
+                    # Filter out any consequents that still contain unbound variables ('?')
+                    consequents = [f for f in consequents if '?' not in f.value]
                     new_inferred = [f for f in consequents if f not in working_memory]
 
                     if new_inferred:
@@ -196,6 +230,8 @@ class BackwardChainingEngine:
                         # Fire rule: add all instantiated consequents
                         from core_engine.unifier import instantiate_consequents
                         new_cons = instantiate_consequents(rule, binding, rule.domain)
+                        # Filter out any consequents that still contain unbound variables ('?')
+                        new_cons = [f for f in new_cons if '?' not in f.value]
                         new_inferred = [f for f in new_cons if f not in working_memory]
                         working_memory.update(new_cons)
 

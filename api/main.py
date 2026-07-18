@@ -93,103 +93,225 @@ FALLBACK_GEOMETRY_RULES = [
     {"id": "geo_congruence_transitive", "name": "Congruence Transitivity", "inputs": ["Congruent(AB,CD)", "Congruent(CD,EF)"], "outputs": ["Congruent(AB,EF)"], "description": "Transitivity of congruence."},
     {"id": "geo_perp_symmetry", "name": "Perpendicular Symmetry", "inputs": ["Perpendicular(AB,CD)"], "outputs": ["Perpendicular(CD,AB)"], "description": "Perpendicularity is symmetric."},
     {"id": "geo_parallel_transitive", "name": "Parallel Transitivity", "inputs": ["Parallel(a,b)", "Parallel(b,c)"], "outputs": ["Parallel(a,c)"], "description": "Transitivity of parallel lines."},
+    # Variable-based parallel/perp rules (match ANY line names — uppercase AB, CD, etc.)
+    {"id": "geo_parallel_transitive_var", "name": "Parallel Transitivity (general)",
+     "inputs": ["Parallel(?A,?B)", "Parallel(?B,?C)"], "outputs": ["Parallel(?A,?C)"],
+     "description": "Transitivity: AB∥CD ∧ CD∥EF ⇒ AB∥EF"},
+    {"id": "geo_parallel_symmetric_var", "name": "Parallel Symmetric (general)",
+     "inputs": ["Parallel(?A,?B)"], "outputs": ["Parallel(?B,?A)"],
+     "description": "Parallel is symmetric."},
+    {"id": "geo_perp_symmetry_var", "name": "Perpendicular Symmetric (general)",
+     "inputs": ["Perpendicular(?A,?B)"], "outputs": ["Perpendicular(?B,?A)"],
+     "description": "Perpendicularity is symmetric."},
     {"id": "geo_triangle_angle_sum", "name": "Triangle Angle Sum", "inputs": ["Triangle(A,B,C)"], "outputs": ["Equal(Add(Angle(BAC),Angle(ABC),Angle(ACB)),180)"], "description": "Angles of a triangle sum to 180°."},
     {"id": "geo_isosceles_base_angles", "name": "Isosceles Base Angles", "inputs": ["Triangle(A,B,C)", "Congruent(AB,AC)"], "outputs": ["Equal(Angle(ABC),Angle(ACB))"], "description": "Base angles of isosceles triangle are equal."},
     {"id": "geo_isosceles_reverse", "name": "Converse Isosceles", "inputs": ["Triangle(A,B,C)", "Equal(Angle(ABC),Angle(ACB))"], "outputs": ["Congruent(AB,AC)"], "description": "Equal base angles implies isosceles."},
-    {"id": "geo_sas_congruence", "name": "SAS Congruence", "inputs": ["Congruent(AB,DE)", "Equal(Angle(BAC),Angle(EDF))", "Congruent(AC,DF)"], "outputs": ["CongruentTriangles(ABC,DEF)"], "description": "Side-Angle-Side congruence."},
-    {"id": "geo_asa_congruence", "name": "ASA Congruence", "inputs": ["Equal(Angle(BAC),Angle(EDF))", "Congruent(AB,DE)", "Equal(Angle(ABC),Angle(DEF))"], "outputs": ["CongruentTriangles(ABC,DEF)"], "description": "Angle-Side-Angle congruence."},
-    {"id": "geo_sss_congruence", "name": "SSS Congruence", "inputs": ["Congruent(AB,DE)", "Congruent(BC,EF)", "Congruent(AC,DF)"], "outputs": ["CongruentTriangles(ABC,DEF)"], "description": "Side-Side-Side congruence."},
-    {"id": "geo_pythagoras", "name": "Pythagorean Theorem", "inputs": ["RightTriangle(A,B,C)", "RightAngle(Angle(BAC))"], "outputs": ["Equal(Pow(BC,2),Add(Pow(AB,2),Pow(AC,2)))", "BC^2=AB^2+AC^2"], "description": "In right triangle ABC at A: BC²=AB²+AC²."},
-    {"id": "geo_pythagoras_converse", "name": "Pythagorean Converse", "inputs": ["Triangle(A,B,C)", "BC^2=AB^2+AC^2"], "outputs": ["RightTriangle(A,B,C)", "RightAngle(Angle(BAC))"], "description": "If BC²=AB²+AC² then right-angled at A."},
-    {"id": "geo_perp_to_parallel", "name": "Perp to Parallel", "inputs": ["Perpendicular(L,a)", "Parallel(a,b)"], "outputs": ["Perpendicular(L,b)"], "description": "Line perp to one parallel is perp to the other."},
-    {"id": "geo_parallel_from_perp", "name": "Two Lines Perp to Same", "inputs": ["Perpendicular(L,a)", "Perpendicular(L,b)"], "outputs": ["Parallel(a,b)"], "description": "Two lines perp to same line are parallel."},
-    {"id": "geo_thales", "name": "Thales Theorem", "inputs": ["Diameter(AB,Circle(O))", "PointOnCircle(C,Circle(O))"], "outputs": ["RightAngle(Angle(ACB))"], "description": "Angle in a semicircle is 90°."},
-    {"id": "geo_congruent_tri_sides", "name": "Congruent Triangles → Sides", "inputs": ["CongruentTriangles(ABC,DEF)"], "outputs": ["Congruent(AB,DE)", "Congruent(BC,EF)", "Congruent(AC,DF)"], "description": "Congruent triangles have congruent sides."},
-    {"id": "geo_congruent_tri_angles", "name": "Congruent Triangles → Angles", "inputs": ["CongruentTriangles(ABC,DEF)"], "outputs": ["Equal(Angle(BAC),Angle(EDF))", "Equal(Angle(ABC),Angle(DEF))", "Equal(Angle(ACB),Angle(DFE))"], "description": "Congruent triangles have equal angles."},
-    {"id": "geo_midpoint_theorem", "name": "Midsegment Theorem", "inputs": ["Triangle(A,B,C)", "Midpoint(M,AB)", "Midpoint(N,AC)"], "outputs": ["Parallel(MN,BC)", "Equal(Length(MN),Div(Length(BC),2))"], "description": "Midsegment is parallel to base and half its length."},
-
-    # ── Equality algebra ──────────────────────────────────────────────────────
-    {"id": "geo_equal_symmetric", "name": "Equality Symmetric",
-     "inputs": ["Equal(?X,?Y)"], "outputs": ["Equal(?Y,?X)"],
-     "description": "If a=b then b=a."},
-    {"id": "geo_equal_transitive", "name": "Equality Transitive",
-     "inputs": ["Equal(?X,?Y)", "Equal(?Y,?Z)"], "outputs": ["Equal(?X,?Z)"],
-     "description": "If a=b and b=c then a=c."},
-
-    # ── Right-angle facts ─────────────────────────────────────────────────────
-    {"id": "geo_right_angle_90", "name": "Right Angle is 90",
-     "inputs": ["RightAngle(Angle(?X))"],
-     "outputs": ["Equal(Angle(?X),90)"],
-     "description": "A right angle equals 90 degrees."},
-    {"id": "geo_right_triangle_expand", "name": "RightTriangle Expand",
-     "inputs": ["RightTriangle(A,B,C)"],
-     "outputs": ["Triangle(A,B,C)", "RightAngle(Angle(BAC))"],
-     "description": "Right triangle at A implies Triangle + RightAngle at A."},
-
-    # ── Exterior angle theorem ────────────────────────────────────────────────
-    {"id": "geo_exterior_angle", "name": "Exterior Angle Theorem",
-     "inputs": ["Triangle(A,B,C)", "ExteriorAngle(?E,A,BC)"],
-     "outputs": ["Equal(Angle(?E),Add(Angle(BAC),Angle(ABC)))"],
-     "description": "Exterior angle = sum of two non-adjacent interior angles."},
-
-    # ── Equilateral triangle ──────────────────────────────────────────────────
-    {"id": "geo_equilateral_all_60", "name": "Equilateral Triangle Angles",
-     "inputs": ["Triangle(A,B,C)", "Congruent(AB,BC)", "Congruent(BC,AC)"],
-     "outputs": ["Equal(Angle(BAC),60)", "Equal(Angle(ABC),60)", "Equal(Angle(ACB),60)"],
-     "description": "All angles of equilateral triangle = 60 degrees."},
-
-    # ── Circle theorems ───────────────────────────────────────────────────────
-    {"id": "geo_thales_right_angle", "name": "Thales: Angle in Semicircle",
-     "inputs": ["Diameter(AB,Circle(O))", "PointOnCircle(C,Circle(O))"],
-     "outputs": ["RightAngle(Angle(ACB))", "Equal(Angle(ACB),90)"],
-     "description": "Angle inscribed in a semicircle is 90 degrees."},
-    {"id": "geo_cyclic_quad_opposite", "name": "Cyclic Quadrilateral Opposite Angles",
-     "inputs": ["CyclicQuadrilateral(A,B,C,D,Circle(O))"],
-     "outputs": ["Equal(Add(Angle(DAB),Angle(BCD)),180)",
-                 "Equal(Add(Angle(ABC),Angle(CDA)),180)"],
-     "description": "Opposite angles of a cyclic quadrilateral sum to 180 degrees."},
-
-    # ── AA Similarity ─────────────────────────────────────────────────────────
-    {"id": "geo_aa_similarity", "name": "AA Similarity",
-     "inputs": ["Triangle(A,B,C)", "Triangle(D,E,F)",
-                "Equal(Angle(BAC),Angle(EDF))", "Equal(Angle(ABC),Angle(DEF))"],
-     "outputs": ["SimilarTriangles(ABC,DEF)"],
-     "description": "Two triangles with two equal angles are similar (AA)."},
-    {"id": "geo_similar_tri_angles", "name": "Similar Triangles: Equal Angles",
-     "inputs": ["SimilarTriangles(ABC,DEF)"],
-     "outputs": ["Equal(Angle(BAC),Angle(EDF))", "Equal(Angle(ABC),Angle(DEF))",
-                 "Equal(Angle(ACB),Angle(DFE))"],
+    # ── Congruence theorems — variable-based, ANY triangle pair ────────────
+    # IDs use _var suffix so they are ALWAYS merged (never overridden by Neo4j's
+    # propositional geo_sas_congruence / geo_asa_congruence etc.).
+    {"id": "geo_sas_congruence_var",
+     "name": "SAS Congruence (general)",
+     "inputs": ["Triangle(?A,?B,?C)", "Triangle(?D,?E,?F)",
+                "Congruent(?A?B,?D?E)",
+                "Equal(Angle(?B?A?C),Angle(?E?D?F))",
+                "Congruent(?A?C,?D?F)"],
+     "outputs": ["CongruentTriangles(?A?B?C,?D?E?F)"],
+     "description": "SAS: AB=DE, ∠BAC=∠EDF, AC=DF ⇒ △ABC≅△DEF"},
+    {"id": "geo_asa_congruence_var",
+     "name": "ASA Congruence (general)",
+     "inputs": ["Triangle(?A,?B,?C)", "Triangle(?D,?E,?F)",
+                "Equal(Angle(?B?A?C),Angle(?E?D?F))",
+                "Congruent(?A?B,?D?E)",
+                "Equal(Angle(?A?B?C),Angle(?D?E?F))"],
+     "outputs": ["CongruentTriangles(?A?B?C,?D?E?F)"],
+     "description": "ASA: ∠BAC=∠EDF, AB=DE, ∠ABC=∠DEF ⇒ △ABC≅△DEF"},
+    {"id": "geo_sss_congruence_var",
+     "name": "SSS Congruence (general)",
+     "inputs": ["Triangle(?A,?B,?C)", "Triangle(?D,?E,?F)",
+                "Congruent(?A?B,?D?E)",
+                "Congruent(?B?C,?E?F)",
+                "Congruent(?A?C,?D?F)"],
+     "outputs": ["CongruentTriangles(?A?B?C,?D?E?F)"],
+     "description": "SSS: AB=DE, BC=EF, AC=DF ⇒ △ABC≅△DEF"},
+    {"id": "geo_aas_congruence_var",
+     "name": "AAS Congruence (general)",
+     "inputs": ["Triangle(?A,?B,?C)", "Triangle(?D,?E,?F)",
+                "Equal(Angle(?B?A?C),Angle(?E?D?F))",
+                "Equal(Angle(?A?B?C),Angle(?D?E?F))",
+                "Congruent(?B?C,?E?F)"],
+     "outputs": ["CongruentTriangles(?A?B?C,?D?E?F)"],
+     "description": "AAS: ∠BAC=∠EDF, ∠ABC=∠DEF, BC=EF ⇒ △ABC≅△DEF"},
+    # Symmetry: CongruentTriangles(ABC,DEF) ⇔ CongruentTriangles(DEF,ABC)
+    {"id": "geo_congruent_tri_symmetric",
+     "name": "Congruent Triangles Symmetric",
+     "inputs": ["CongruentTriangles(?ABC,?DEF)"],
+     "outputs": ["CongruentTriangles(?DEF,?ABC)"],
+     "description": "Triangle congruence is symmetric."},
+    {"id": "geo_pythagoras_var", "name": "Pythagorean Theorem",
+     "inputs": ["RightTriangle(?A,?B,?C)", "RightAngle(Angle(?B?A?C))"],
+     "outputs": ["Equal(Pow(Length(?B?C),2),Add(Pow(Length(?A?B),2),Pow(Length(?A?C),2)))"],
+     "description": "BC² = AB² + AC² in a right-angled triangle."},
+    {"id": "geo_pythagoras_converse_var", "name": "Pythagorean Converse",
+     "inputs": ["Triangle(?A,?B,?C)", "Equal(Pow(Length(?B?C),2),Add(Pow(Length(?A?B),2),Pow(Length(?A?C),2)))"],
+     "outputs": ["RightTriangle(?A,?B,?C)", "RightAngle(Angle(?B?A?C))"],
+     "description": "If BC² = AB² + AC² then the triangle is right-angled at A."},
+    {"id": "geo_right_triangle_height_metric_var", "name": "Right Triangle Height Metric",
+     "inputs": ["RightTriangle(?A,?B,?C)", "RightAngle(Angle(?B?A?C))", "Foot(?H,?A,?B?C)"],
+     "outputs": ["Equal(Div(1,Pow(Length(?A?H),2)),Add(Div(1,Pow(Length(?A?B),2)),Div(1,Pow(Length(?A?C),2))))"],
+     "description": "1/AH² = 1/AB² + 1/AC² in a right triangle with altitude AH."},
+    {"id": "geo_thales_var", "name": "Thales Theorem",
+     "inputs": ["Diameter(?A?B,Circle(?O))", "PointOnCircle(?C,Circle(?O))"],
+     "outputs": ["RightAngle(Angle(?A?C?B))"],
+     "description": "Angle in a semicircle is 90°."},
+    {"id": "geo_congruent_tri_sides_var", "name": "Congruent Triangles → Sides",
+     "inputs": ["CongruentTriangles(?A?B?C,?D?E?F)"],
+     "outputs": ["Congruent(?A?B,?D?E)", "Congruent(?B?C,?E?F)", "Congruent(?A?C,?D?F)"],
+     "description": "Congruent triangles have congruent sides."},
+    {"id": "geo_congruent_tri_angles_var", "name": "Congruent Triangles → Angles",
+     "inputs": ["CongruentTriangles(?A?B?C,?D?E?F)"],
+     "outputs": ["Equal(Angle(?B?A?C),Angle(?E?D?F))", "Equal(Angle(?A?B?C),Angle(?D?E?F))", "Equal(Angle(?A?C?B),Angle(?D?F?E))"],
+     "description": "Congruent triangles have equal angles."},
+    {"id": "geo_midpoint_theorem_var", "name": "Midsegment Theorem",
+     "inputs": ["Triangle(?A,?B,?C)", "Midpoint(?M,?A?B)", "Midpoint(?N,?A?C)"],
+     "outputs": ["Parallel(?M?N,?B?C)", "Equal(Length(?M?N),Div(Length(?B?C),2))"],
+     "description": "Midsegment is parallel to base and half its length."},
+    {"id": "geo_right_triangle_expand_var", "name": "RightTriangle Expand",
+     "inputs": ["RightTriangle(?A,?B,?C)"],
+     "outputs": ["Triangle(?A,?B,?C)", "RightAngle(Angle(?B?A?C))"],
+     "description": "Expand RightTriangle to Triangle + RightAngle."},
+    {"id": "geo_exterior_angle_var", "name": "Exterior Angle Theorem",
+     "inputs": ["Triangle(?A,?B,?C)", "ExteriorAngle(?E,?A,?B?C)"],
+     "outputs": ["Equal(Angle(?E),Add(Angle(?B?A?C),Angle(?A?B?C)))"],
+     "description": "Exterior angle is sum of two non-adjacent interior angles."},
+    {"id": "geo_equilateral_all_60_var", "name": "Equilateral Triangle Angles",
+     "inputs": ["Triangle(?A,?B,?C)", "Congruent(?A?B,?B?C)", "Congruent(?B?C,?A?C)"],
+     "outputs": ["Equal(Angle(?B?A?C),60)", "Equal(Angle(?A?B?C),60)", "Equal(Angle(?A?C?B),60)"],
+     "description": "All angles of equilateral triangle are 60°."},
+    {"id": "geo_thales_right_angle_var", "name": "Thales: Angle in Semicircle",
+     "inputs": ["Diameter(?A?B,Circle(?O))", "PointOnCircle(?C,Circle(?O))"],
+     "outputs": ["RightAngle(Angle(?A?C?B))", "Equal(Angle(?A?C?B),90)"],
+     "description": "Angle inscribed in a semicircle is 90°."},
+    {"id": "geo_cyclic_quad_opposite_var", "name": "Cyclic Quadrilateral Opposite Angles",
+     "inputs": ["CyclicQuadrilateral(?A,?B,?C,?D,Circle(?O))"],
+     "outputs": ["Equal(Add(Angle(?D?A?B),Angle(?B?C?D)),180)", "Equal(Add(Angle(?A?B?C),Angle(?C?D?A)),180)"],
+     "description": "Opposite angles of cyclic quadrilateral sum to 180°."},
+    {"id": "geo_aa_similarity_var", "name": "AA Similarity",
+     "inputs": ["Triangle(?A,?B,?C)", "Triangle(?D,?E,?F)", "Equal(Angle(?B?A?C),Angle(?E?D?F))", "Equal(Angle(?A?B?C),Angle(?D?E?F))"],
+     "outputs": ["SimilarTriangles(?A?B?C,?D?E?F)"],
+     "description": "AA similarity theorem."},
+    {"id": "geo_similar_tri_angles_var", "name": "Similar Triangles: Equal Angles",
+     "inputs": ["SimilarTriangles(?A?B?C,?D?E?F)"],
+     "outputs": ["Equal(Angle(?B?A?C),Angle(?E?D?F))", "Equal(Angle(?A?B?C),Angle(?D?E?F))", "Equal(Angle(?A?C?B),Angle(?D?F?E))"],
      "description": "Similar triangles have equal corresponding angles."},
-    {"id": "geo_similar_tri_ratios", "name": "Similar Triangles: Proportional Sides",
-     "inputs": ["SimilarTriangles(ABC,DEF)"],
-     "outputs": ["Equal(Div(Length(AB),Length(DE)),Div(Length(BC),Length(EF)))",
-                 "Equal(Div(Length(AB),Length(DE)),Div(Length(AC),Length(DF)))"],
+    {"id": "geo_similar_tri_ratios_var", "name": "Similar Triangles: Proportional Sides",
+     "inputs": ["SimilarTriangles(?A?B?C,?D?E?F)"],
+     "outputs": ["Equal(Div(Length(?A?B),Length(?D?E)),Div(Length(?B?C),Length(?E?F)))",
+                 "Equal(Div(Length(?A?B),Length(?D?E)),Div(Length(?A?C),Length(?D?F)))"],
      "description": "Similar triangles have proportional corresponding sides."},
-
-    # ── Midpoint ──────────────────────────────────────────────────────────────
-    {"id": "geo_midpoint_halves", "name": "Midpoint Halves Segment",
-     "inputs": ["Midpoint(M,AB)"],
-     "outputs": ["Equal(Length(AM),Length(MB))",
-                 "Equal(Length(AM),Div(Length(AB),2))"],
+    {"id": "geo_midpoint_halves_var", "name": "Midpoint Halves Segment",
+     "inputs": ["Midpoint(?M,?A?B)"],
+     "outputs": ["Equal(Length(?A?M),Length(?M?B))", "Equal(Length(?A?M),Div(Length(?A?B),2))"],
      "description": "Midpoint divides segment into two equal halves."},
+ 
+     # ── Circle & Power of Point Theorems ──────────────────────────────────────
+    {"id": "geo_chord_definition_var", "name": "Chord Definition",
+     "inputs": ["PointOnCircle(?A,Circle(?O))", "PointOnCircle(?B,Circle(?O))"],
+     "outputs": ["Chord(?A,?B,Circle(?O))"],
+     "description": "A segment connecting two points on a circle is a chord."},
+    {"id": "geo_intersecting_chords_var", "name": "Intersecting Chords Theorem",
+     "inputs": ["Circle(?O)", "PointOnCircle(?A,Circle(?O))", "PointOnCircle(?B,Circle(?O))",
+                "PointOnCircle(?C,Circle(?O))", "PointOnCircle(?D,Circle(?O))",
+                "IntersectionPoint(?P,?A?B,?C?D)"],
+     "outputs": ["Equal(Mul(Length(?A?P),Length(?P?B)),Mul(Length(?C?P),Length(?P?D)))"],
+     "description": "Power of Point: PA * PB = PC * PD for intersecting chords."},
+    {"id": "geo_tangent_secant_theorem_var", "name": "Tangent-Secant Theorem",
+     "inputs": ["Circle(?O)", "PointOutsideCircle(?P,Circle(?O))",
+                "TangentSegment(?P,?T,Circle(?O))", "SecantSegment(?P,?A,?B,Circle(?O))"],
+     "outputs": ["Equal(Pow(Length(?P?T),2),Mul(Length(?P?A),Length(?P?B)))"],
+     "description": "Square of tangent segment equals product of secant segments."},
+    {"id": "geo_ptolemy_theorem_var", "name": "Ptolemy's Theorem",
+     "inputs": ["CyclicQuadrilateral(?A,?B,?C,?D)"],
+     "outputs": ["Equal(Mul(Length(?A?C),Length(?B?D)),Add(Mul(Length(?A?B),Length(?C?D)),Mul(Length(?B?C),Length(?A?D))))"],
+     "description": "Ptolemy: AC * BD = AB * CD + BC * AD."},
+ 
+     # ── Rhombus & Olympiad Lemmas ─────────────────────────────────────────────
+    {"id": "geo_rhombus_diagonals_perp_var", "name": "Rhombus Diagonals are Perpendicular",
+     "inputs": ["Rhombus(?A,?B,?C,?D)"],
+     "outputs": ["Perpendicular(?A?C,?B?D)"],
+     "description": "The diagonals of a rhombus are perpendicular to each other."},
+    {"id": "geo_ceva_theorem_var", "name": "Ceva's Theorem",
+     "inputs": ["Triangle(?A,?B,?C)", "PointOnSegment(?D,?B,?C)", "PointOnSegment(?E,?A,?C)",
+                "PointOnSegment(?F,?A,?B)", "Concurrent(?A?D,?B?E,?C?F)"],
+     "outputs": ["Equal(Mul(Div(Length(?B?D),Length(?C?D)),Mul(Div(Length(?C?E),Length(?A?E)),Div(Length(?A?F),Length(?B?F)))),1)"],
+     "description": "Condition for three cevians to be concurrent."},
+    {"id": "geo_menelaus_theorem_var", "name": "Menelaus's Theorem",
+     "inputs": ["Triangle(?A,?B,?C)", "PointOnLine(?D,?B,?C)", "PointOnLine(?E,?C,?A)",
+                "PointOnLine(?F,?A,?B)", "Collinear(?D,?E,?F)"],
+     "outputs": ["Equal(Mul(Div(Length(?B?D),Length(?C?D)),Mul(Div(Length(?C?E),Length(?A?E)),Div(Length(?A?F),Length(?B?F)))),1)"],
+     "description": "Menelaus collinearity theorem."},
+    {"id": "geo_simson_line_var", "name": "Simson Line Theorem",
+     "inputs": ["Triangle(?A,?B,?C)", "PointOnCircle(?P,Circle(?O))",
+                "Circumcircle(?O,?A,?B,?C)",
+                "Foot(?X,?P,?A?B)", "Foot(?Y,?P,?B?C)", "Foot(?Z,?P,?A?C)"],
+     "outputs": ["Collinear(?X,?Y,?Z)"],
+     "description": "The feet of the perpendiculars from a point on the circumcircle are collinear."},
+    {"id": "geo_parallelogram_diagonal_triangles_var", "name": "Parallelogram Diagonal Triangles Properties",
+     "inputs": ["Parallelogram(?A,?B,?C,?D)", "PointOnSegment(?M,?A,?C)", "PointOnSegment(?N,?A,?C)"],
+     "outputs": ["Triangle(?A,?D,?M)", "Triangle(?C,?B,?N)", "Congruent(?A?D,?C?B)", "Equal(Angle(?D?A?M),Angle(?B?C?N))"],
+     "description": "Properties of triangles formed on a parallelogram diagonal."},
+    {"id": "geo_parallel_quadrilateral_properties_var", "name": "Parallel Quadrilateral Diagonal Properties",
+     "inputs": ["Parallel(?A?B,?C?D)", "Parallel(?A?D,?B?C)", "PointOnSegment(?M,?A,?C)", "PointOnSegment(?N,?A,?C)"],
+     "outputs": [
+         "Congruent(?A?D,?C?B)",
+         "Congruent(?A?B,?C?D)",
+         "Triangle(?A,?D,?M)",
+         "Triangle(?C,?B,?N)",
+         "Equal(Angle(?D?A?M),Angle(?B?C?N))"
+     ],
+     "description": "If opposite sides of a quadrilateral are parallel, it is a parallelogram, yielding congruent opposite sides, diagonal alternate angles, and triangle existence."}
 ]
 
 
 def _get_rules(neo4j_conn: Neo4jConnection) -> list:
-    """Load rules from Neo4j, fallback to built-in set."""
-    rules = []
+    """
+    Load rules from Neo4j and ALWAYS merge with built-in FALLBACK rules.
+
+    Strategy:
+    - Try Neo4j first; collect its rules.
+    - ALWAYS add FALLBACK rules that are not already present (by rule ID).
+      This guarantees that variable-based SAS/ASA/SSS/AAS congruence rules
+      are present even when Neo4j has 307+ rules (which are propositional).
+    - If Neo4j fails, use FALLBACK exclusively.
+    """
+    neo4j_rules = []
     try:
         if neo4j_conn.verify_connectivity():
             with neo4j_conn.get_session() as session:
                 raw = _load_rules_from_neo4j(session)
-                rules = [PARSER.parse_rule(r) for r in raw]
-                logger.info("Loaded %d rules from Neo4j", len(rules))
+                neo4j_rules = [PARSER.parse_rule(r) for r in raw]
+                logger.info("Loaded %d rules from Neo4j", len(neo4j_rules))
     except Exception as e:
-        logger.warning("Neo4j rule load failed: %s — using fallback rules", e)
-    if not rules:
-        logger.info("Using built-in fallback geometry rules (%d)", len(FALLBACK_GEOMETRY_RULES))
-        rules = [PARSER.parse_rule(r) for r in FALLBACK_GEOMETRY_RULES]
-    return rules
+        logger.warning("Neo4j rule load failed: %s — using fallback rules only", e)
+
+    # Build a set of existing rule IDs from Neo4j
+    existing_ids = {r.id for r in neo4j_rules}
+
+    # Parse FALLBACK rules and add any not already present
+    fallback_parsed = [PARSER.parse_rule(r) for r in FALLBACK_GEOMETRY_RULES]
+    merged = list(neo4j_rules)
+    added_fallback = 0
+    for fr in fallback_parsed:
+        if fr.id not in existing_ids:
+            merged.append(fr)
+            added_fallback += 1
+
+    if not neo4j_rules:
+        logger.info("Using fallback-only rules (%d)", len(merged))
+    else:
+        logger.info("Merged rules: %d Neo4j + %d fallback additions = %d total",
+                    len(neo4j_rules), added_fallback, len(merged))
+    return merged
+
 
 
 # ---------------------------------------------------------------------------
@@ -381,11 +503,16 @@ async def geo_solve(request: GeoSolveRequest):
     AlphaGeometry-inspired endpoint.
     Runs the solver; if stuck, calls the Auxiliary Construction Agent to add
     new geometric objects, then retries — up to max_construction_iterations times.
+
+    Has a 90-second overall deadline; returns best partial result on timeout.
     """
+    import asyncio
     from geo_engine.auxiliary_agent import AuxiliaryConstructionAgent
     from rag_agent.llm_factory import get_llm
 
-    try:
+    SOLVER_DEADLINE_SECONDS = 90  # Hard cap to prevent frontend timeout
+
+    async def _run_geo_solve():
         logger.info("[GeoSolve] Query: '%s'", request.query)
         initial_facts, goal_fact = route_query(request.query)
 
@@ -401,6 +528,7 @@ async def geo_solve(request: GeoSolveRequest):
 
         all_constructions: List[str] = []
         current_facts = list(initial_facts)
+        result = None
 
         max_iter = max(0, request.max_construction_iterations)
 
@@ -415,6 +543,15 @@ async def geo_solve(request: GeoSolveRequest):
             if iteration == max_iter:
                 logger.info("[GeoSolve] Max iterations reached. Goal not proved.")
                 break
+
+            # ── Smart Aux Agent trigger ────────────────────────────────────────
+            # Only call LLM if solver is genuinely stuck (derived < 3 new facts)
+            # Prevents wasting LLM quota when solver is making progress
+            new_facts_count = len(result.final_facts) - len(current_facts)
+            if new_facts_count >= 3:
+                logger.info("[GeoSolve] Solver derived %d new facts — retrying without aux", new_facts_count)
+                current_facts = [f for f in result.final_facts]
+                continue
 
             # Attempt auxiliary construction
             llm = get_llm(temperature=0.3)
@@ -443,6 +580,22 @@ async def geo_solve(request: GeoSolveRequest):
                         current_facts.append(new_fact)
                         logger.info("[GeoSolve] Added auxiliary fact: %s", nf_str)
 
+        return result, initial_facts, goal_fact, all_constructions
+
+    try:
+        try:
+            result, initial_facts, goal_fact, all_constructions = await asyncio.wait_for(
+                _run_geo_solve(),
+                timeout=SOLVER_DEADLINE_SECONDS,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("[GeoSolve] Solver deadline (%ds) exceeded — returning partial result", SOLVER_DEADLINE_SECONDS)
+            # Return a partial result indicating timeout rather than crashing
+            raise HTTPException(
+                status_code=408,
+                detail=f"Solver timed out after {SOLVER_DEADLINE_SECONDS}s. The problem may require more advanced constructions. Try simplifying the query or check the problem statement."
+            )
+
         steps = [
             ExecutionStepResponse(
                 rule_id=s.rule_id,
@@ -467,29 +620,65 @@ async def geo_solve(request: GeoSolveRequest):
         raise
     except Exception as e:
         logger.error("[GeoSolve] Error: %s", e, exc_info=True)
+
         raise HTTPException(status_code=500, detail=f"GeoSolve error: {str(e)}")
 
 
 def _build_explain_system_prompt(goal_reached: bool) -> str:
+    latex_guide = (
+        "CRITICAL FOR LATEX MATHEMATICAL NOTATION:\n"
+        "Ensure all mathematical symbols, equations, segments, angles, and triangles are beautifully and consistently formatted in LaTeX using single dollar signs ($...$):\n"
+        "- Triangles: use $\\triangle ABC$ instead of 'Triangle(ABC)' or 'tam giác ABC'.\n"
+        "- Angles: use $\\angle ABC$ instead of 'Angle(ABC)' or 'góc ABC'.\n"
+        "- Segments: use $AB$, $CD$ instead of raw segment strings.\n"
+        "- Congruence: use $\\cong$ (e.g., $\\triangle ABC \\cong \\triangle DEF$, $AB \\cong CD$).\n"
+        "- Parallelism: use $\\parallel$ (e.g., $AB \\parallel CD$).\n"
+        "- Equality: use $=$ (e.g., $AB = CD$ or $\\angle ABC = \\angle DEF$).\n"
+        "- Degree: use $^\\circ$ (e.g., $90^\\circ$, $50^\\circ$) instead of the degree symbol (°) or word 'độ'.\n"
+        "- Fractions/Division: use $\\frac{{a}}{{b}}$ (e.g., $\\frac{{1}}{{AH^2}} = \\frac{{1}}{{AB^2}} + \\frac{{1}}{{AC^2}}$) instead of slashes or raw division predicates.\n"
+        "- Products/Multiplication: use $\\cdot$ (e.g., $PA \\cdot PB = PC \\cdot PD$) or standard multiplication formatting.\n"
+        "All explanations must be in Vietnamese, highly professional, standard, and easy to read.\n"
+    )
+
     if goal_reached:
         return (
-            "You are an expert plane geometry tutor and proof explainer for GeoIPS.\n"
-            "Your task is to translate a symbolic geometry proof trace into a clear, engaging, "
-            "pedagogically rich explanation suitable for a high-school student.\n"
-            "Reference specific Euclidean theorems and axioms by name (e.g., Thales' Theorem, SAS Congruence).\n"
-            "Use LaTeX notation for mathematical expressions where helpful (e.g., $\\angle ABC = 90°$).\n"
-            "Use markdown headers, bullet points, and clear step-by-step structure.\n"
-            "STRICT: Only explain steps that appear in the trace. Do not hallucinate extra steps."
+            "You are an expert plane geometry tutor for GeoIPS.\n"
+            "Your task is to write a beautiful, natural language geometry proof (lời giải tự nhiên chuẩn học sinh đang thi IMO) "
+            "in Vietnamese that reads elegantly, starts with the given facts, uses logical transition words, and ends with the goal.\n"
+            "Make it read like an elegant proof written by a human mathematician. Do NOT write a raw list of steps like 'Step 1: ...' in the main body. "
+            "Instead, integrate all the logical steps from the proof trace into a cohesive, paragraph-based mathematical proof.\n"
+            "Reference specific Euclidean theorems and axioms by name where relevant (e.g., định lý Thales, định lý Pythagore, tam giác đồng dạng, hai tam giác bằng nhau theo trường hợp cạnh-góc-cạnh (c-g-c)).\n"
+            + latex_guide +
+            "\n"
+            "CRITICAL: At the very end of your response, you MUST output the raw deduction steps wrapped inside an HTML `<details>` toggle like this:\n"
+            "<details>\n"
+            "<summary><b>📋 Chi tiết các bước suy luận hệ thống (Deduction Steps)</b></summary>\n"
+            "\n"
+            "### Các bước suy luận hệ thống:\n"
+            "For each step in the trace, write a short bullet point explaining what rule fired and what was derived (e.g., *Bước 1: Áp dụng định lý... để suy ra...*).\n"
+            "</details>\n"
+            "\n"
+            "STRICT: Only explain logical connections that appear in the trace. Do not hallucinate extra steps."
         )
     else:
         return (
             "You are an expert plane geometry tutor for GeoIPS.\n"
             "The symbolic solver could NOT prove the goal from the given facts.\n"
-            "Explain clearly to a high-school student:\n"
+            "Explain clearly to a high-school student in Vietnamese:\n"
             "1. What facts were given and what the goal was.\n"
             "2. What intermediate facts (if any) were deduced before the solver got stuck.\n"
             "3. WHY the proof failed — is a hypothesis missing? Is there a theorem needed that isn't in the KB?\n"
             "4. What additional information or constructions might help.\n"
+            + latex_guide +
+            "\n"
+            "CRITICAL: Wrap the list of attempted/deduced steps inside an HTML `<details>` toggle at the end of your response like this:\n"
+            "<details>\n"
+            "<summary><b>📋 Chi tiết các bước suy luận hệ thống (Deduction Steps)</b></summary>\n"
+            "\n"
+            "### Các bước đã thử nghiệm:\n"
+            "...\n"
+            "</details>\n"
+            "\n"
             "STRICT: Do NOT claim the goal was proved. Start by clearly stating it is UNPROVED."
         )
 
@@ -532,30 +721,35 @@ async def explain_proof(request: ExplainRequest):
         parts = [
             "# Geometry Proof Explanation\n",
             f"**Query:** *{request.query}*\n",
-            "The symbolic engine successfully proved the goal. Here is the step-by-step breakdown:\n\n",
+            "The symbolic engine successfully proved the goal.\n\n",
         ]
         if request.auxiliary_constructions:
             parts.append(f"**Auxiliary Constructions Used:** {', '.join(request.auxiliary_constructions)}\n\n")
+        
+        parts.append("<details>\n<summary><b>📋 Chi tiết các bước suy luận hệ thống (Deduction Steps)</b></summary>\n\n")
         parts.append("## Deduction Steps\n")
         for i, step in enumerate(request.execution_trace):
             parts.append(f"### Step {i+1}: `{step.rule_id}`")
             parts.append(f"- **Rule:** `{step.fired_rule_repr}`")
             parts.append(f"- **New facts:** `{', '.join(step.new_facts)}`\n")
-        parts.append("## Conclusion\nThe goal has been formally proved by the symbolic engine. ✓")
+        parts.append("\n</details>\n")
+        parts.append("\n## Conclusion\nThe goal has been formally proved by the symbolic engine. ✓")
     else:
         parts = [
             "# ⚠️ Proof Attempt — Goal Not Reached\n",
             f"**Query:** *{request.query}*\n",
             "The solver could not establish the goal from the given facts.\n\n",
-            "## Attempted Steps\n",
         ]
+        parts.append("<details>\n<summary><b>📋 Chi tiết các bước suy luận hệ thống (Deduction Steps)</b></summary>\n\n")
+        parts.append("## Attempted Steps\n")
         if not request.execution_trace:
             parts.append("No rules were triggered — the given facts do not satisfy any theorem preconditions.\n")
         for i, step in enumerate(request.execution_trace):
             parts.append(f"### Step {i+1}: `{step.rule_id}`")
             parts.append(f"- **Rule:** `{step.fired_rule_repr}`")
             parts.append(f"- **New facts:** `{', '.join(step.new_facts)}`\n")
-        parts.append("## Analysis\n⚠️ **Logical gap detected.** Either the initial conditions are insufficient, or the Knowledge Base is missing a bridging theorem.")
+        parts.append("\n</details>\n")
+        parts.append("\n## Analysis\n⚠️ **Logical gap detected.** Either the initial conditions are insufficient, or the Knowledge Base is missing a bridging theorem.")
 
     return ExplainResponse(explanation="\n".join(parts), structured=False)
 
@@ -606,11 +800,14 @@ async def explain_proof_stream(request: ExplainRequest):
         ]
         if request.auxiliary_constructions:
             parts.append(f"**Auxiliary Constructions:** {', '.join(request.auxiliary_constructions)}\n\n")
+        
+        parts.append("<details>\n<summary><b>📋 Chi tiết các bước suy luận hệ thống (Deduction Steps)</b></summary>\n\n")
         parts.append("## Deduction Steps\n")
         for i, step in enumerate(request.execution_trace):
             parts.append(f"### Step {i+1}: `{step.rule_id}`\n")
             parts.append(f"- **Rule:** `{step.fired_rule_repr}`\n")
             parts.append(f"- **New facts:** `{', '.join(step.new_facts)}`\n\n")
+        parts.append("</details>\n\n")
         parts.append("## ✓ Conclusion\nGoal formally proved by the symbolic engine.\n")
     else:
         parts = [
@@ -618,12 +815,14 @@ async def explain_proof_stream(request: ExplainRequest):
             f"**Query:** *{request.query}*\n\n",
             "The solver could not establish the goal from the given facts.\n\n",
         ]
+        parts.append("<details>\n<summary><b>📋 Chi tiết các bước suy luận hệ thống (Deduction Steps)</b></summary>\n\n")
         if not request.execution_trace:
             parts.append("No rules were triggered.\n")
         for i, step in enumerate(request.execution_trace):
             parts.append(f"### Step {i+1}: `{step.rule_id}`\n")
             parts.append(f"- **Rule:** `{step.fired_rule_repr}`\n")
             parts.append(f"- **New facts:** `{', '.join(step.new_facts)}`\n\n")
+        parts.append("</details>\n\n")
         parts.append("## Analysis\n⚠️ Logical gap detected — KB may be missing a bridging theorem.\n")
 
     async def generate_template():

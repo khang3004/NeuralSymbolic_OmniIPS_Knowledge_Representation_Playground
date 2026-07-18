@@ -27,60 +27,248 @@ def _is_numeric(s: str) -> bool:
         return False
 
 
-def _canonical_angle(spec: str) -> str:
-    """
-    Reduce any angle notation to a canonical vertex-centric compact form.
+def split_top_level(text: str) -> List[str]:
+    args = []
+    current = []
+    depth = 0
+    for ch in text:
+        if ch == ',' and depth == 0:
+            args.append(''.join(current).strip())
+            current = []
+        else:
+            if ch == '(':
+                depth += 1
+            elif ch == ')':
+                depth -= 1
+            current.append(ch)
+    if current:
+        args.append(''.join(current).strip())
+    return args
 
-    Input forms handled:
-      Angle(BAC)      → 'Angle(BAC)'   vertex=A (middle of 3-char string)
-      Angle(B,A,C)    → 'Angle(BAC)'   vertex=A (middle arg)
-      Angle(C,A,B)    → 'Angle(BAC)'   same angle, just reversed direction
 
-    The canonical form is always Angle(XYZ) where Y is the vertex,
-    and X < Z alphabetically to remove direction ambiguity.
-    """
-    spec = spec.strip().replace(" ", "")
+class ExprParser:
+    def __init__(self, text):
+        self.text = text.replace(' ', '')
+        self.pos = 0
 
-    # Already compact 3-char: Angle(BAC)
-    m3 = re.fullmatch(r"Angle\(([A-Z])([A-Z])([A-Z])\)", spec)
-    if m3:
-        p, v, q = m3.group(1), m3.group(2), m3.group(3)
-        # Canonicalize direction: smaller leg first
-        if p > q:
-            p, q = q, p
-        return f"Angle({p}{v}{q})"
+    def peek(self):
+        if self.pos < len(self.text):
+            return self.text[self.pos]
+        return None
 
-    # Comma form: Angle(B,A,C)
-    mc = re.fullmatch(r"Angle\(([A-Z]),([A-Z]),([A-Z])\)", spec)
-    if mc:
-        p, v, q = mc.group(1), mc.group(2), mc.group(3)
-        if p > q:
-            p, q = q, p
-        return f"Angle({p}{v}{q})"
+    def get_char(self):
+        ch = self.peek()
+        if ch:
+            self.pos += 1
+        return ch
 
-    return spec  # Unknown form: leave unchanged
+    def match(self, expected):
+        if self.peek() == expected:
+            self.pos += 1
+            return True
+        return False
+
+    def parse_number_or_word(self):
+        start = self.pos
+        while self.pos < len(self.text) and (self.text[self.pos].isalnum() or self.text[self.pos] in '_?^'):
+            self.pos += 1
+        return self.text[start:self.pos]
+
+    def parse_list(self, is_algebraic):
+        self.match('(')
+        args = []
+        while True:
+            args.append(self.parse_equality(is_algebraic))
+            if self.match(','):
+                continue
+            if self.match(')'):
+                break
+            break
+        return args
+
+    def parse_base(self, is_algebraic):
+        ch = self.peek()
+        if ch == '(':
+            self.get_char()
+            val = self.parse_equality(is_algebraic)
+            self.match(')')
+            return val
+
+        word = self.parse_number_or_word()
+        
+        if self.peek() == '(':
+            child_algebraic = is_algebraic or (word in ('Mul', 'Add', 'Pow', 'Div', 'Sub'))
+            if word == 'Length':
+                child_algebraic = False
+            
+            args = self.parse_list(child_algebraic)
+            return self.normalize_functor(word, args, is_algebraic)
+        
+        return self.normalize_leaf(word, is_algebraic)
+
+    def normalize_functor(self, name, args, is_algebraic):
+        name = name.strip()
+        
+        if name == 'Segment' and len(args) == 2:
+            return ''.join(sorted(args))
+        
+        if name == 'Length' and len(args) == 1:
+            arg = args[0]
+            if len(arg) == 2 and arg.isalpha():
+                arg = ''.join(sorted(arg))
+            return f"Length({arg})"
+        
+        if name == 'Angle':
+            if len(args) == 1 and len(args[0]) == 3:
+                p, v, q = args[0][0], args[0][1], args[0][2]
+                if p > q:
+                    p, q = q, p
+                return f"Angle({p}{v}{q})"
+            elif len(args) == 3:
+                p, v, q = args[0], args[1], args[2]
+                if p > q:
+                    p, q = q, p
+                return f"Angle({p}{v}{q})"
+            return f"Angle({','.join(args)})"
+
+        if name == 'Equal' and len(args) == 2:
+            lhs, rhs = args[0], args[1]
+            if not is_algebraic:
+                lhs_is_alg = 'Length(' in lhs or 'Mul(' in lhs or 'Add(' in lhs or 'Pow(' in lhs or 'Div(' in lhs or 'Sub(' in lhs or any(c.isdigit() for c in lhs)
+                rhs_is_alg = 'Length(' in rhs or 'Mul(' in rhs or 'Add(' in rhs or 'Pow(' in rhs or 'Div(' in rhs or 'Sub(' in rhs or any(c.isdigit() for c in rhs)
+                if lhs_is_alg or rhs_is_alg:
+                    lhs = canonicalize(lhs, True)
+                    rhs = canonicalize(rhs, True)
+            return f"Equal({lhs},{rhs})"
+
+        commutative_relations = {
+            "Congruent", "Similar", "Parallel", "Intersect", 
+            "CongruentTriangles", "SimilarTriangles",
+            "Concurrent", "Collinear"
+        }
+        if name in commutative_relations:
+            return f"{name}({','.join(sorted(args))})"
+
+        if name == 'Mul':
+            flat_args = []
+            for arg in args:
+                if arg.startswith('Mul(') and arg.endswith(')'):
+                    flat_args.extend(split_top_level(arg[4:-1]))
+                else:
+                    flat_args.append(arg)
+            return f"Mul({','.join(sorted(flat_args))})"
+
+        if name == 'Add':
+            flat_args = []
+            for arg in args:
+                if arg.startswith('Add(') and arg.endswith(')'):
+                    flat_args.extend(split_top_level(arg[4:-1]))
+                else:
+                    flat_args.append(arg)
+            return f"Add({','.join(sorted(flat_args))})"
+
+        return f"{name}({','.join(args)})"
+
+    def normalize_leaf(self, word, is_algebraic):
+        if not word:
+            return ""
+        
+        if len(word) == 2 and word.isupper() and word.isalpha():
+            canonical_segment = ''.join(sorted(word))
+            if is_algebraic:
+                return f"Length({canonical_segment})"
+            return canonical_segment
+        
+        if '^' in word:
+            parts = word.split('^')
+            if len(parts) == 2:
+                base = self.normalize_leaf(parts[0], is_algebraic)
+                exponent = self.normalize_leaf(parts[1], is_algebraic)
+                return f"Pow({base},{exponent})"
+
+        return word
+
+    def parse_power(self, is_algebraic):
+        left = self.parse_base(is_algebraic)
+        if self.match('^'):
+            left = self.normalize_to_algebraic(left)
+            right = self.parse_power(True)
+            return f"Pow({left},{right})"
+        return left
+
+    def parse_term(self, is_algebraic):
+        left = self.parse_power(is_algebraic)
+        while True:
+            if self.match('*'):
+                left = self.normalize_to_algebraic(left)
+                right = self.parse_power(True)
+                args = []
+                for x in [left, right]:
+                    if x.startswith('Mul(') and x.endswith(')'):
+                        args.extend(split_top_level(x[4:-1]))
+                    else:
+                        args.append(x)
+                left = f"Mul({','.join(sorted(args))})"
+            elif self.match('/'):
+                left = self.normalize_to_algebraic(left)
+                right = self.parse_power(True)
+                left = f"Div({left},{right})"
+            else:
+                break
+        return left
+
+    def parse_expr(self, is_algebraic):
+        left = self.parse_term(is_algebraic)
+        while True:
+            if self.match('+'):
+                left = self.normalize_to_algebraic(left)
+                right = self.parse_term(True)
+                args = []
+                for x in [left, right]:
+                    if x.startswith('Add(') and x.endswith(')'):
+                        args.extend(split_top_level(x[4:-1]))
+                    else:
+                        args.append(x)
+                left = f"Add({','.join(sorted(args))})"
+            elif self.match('-'):
+                left = self.normalize_to_algebraic(left)
+                right = self.parse_term(True)
+                left = f"Sub({left},{right})"
+            else:
+                break
+        return left
+
+    def parse_equality(self, is_algebraic):
+        left = self.parse_expr(is_algebraic)
+        if self.match('='):
+            left = self.normalize_to_algebraic(left)
+            right = self.parse_equality(True)
+            return f"Equal({left},{right})"
+        return left
+
+    def normalize_to_algebraic(self, val):
+        if len(val) == 2 and val.isupper() and val.isalpha():
+            return f"Length({''.join(sorted(val))})"
+        return val
+
+
+def canonicalize(text: str, is_algebraic: bool = False) -> str:
+    try:
+        parser = ExprParser(text)
+        return parser.parse_equality(is_algebraic)
+    except Exception as e:
+        logger.warning("ExprParser failed to parse '%s': %s", text, e)
+        return text
 
 
 def normalize_fact_value(value: str) -> str:
     """
-    Normalize all angle notations in a geometry fact value string to the
-    canonical vertex-centric compact form Angle(XYZ).
-
-    Handles both Angle(BAC) and Angle(B,A,C) forms anywhere in the string.
+    Canonicalize a geometry or arithmetic fact string.
+    Uses ExprParser to normalize all angles, segments, commutative relations,
+    and algebraic equations consistently.
     """
-    # Replace comma form first: Angle(X,Y,Z) → canonical
-    value = re.sub(
-        r"Angle\(([A-Z]),([A-Z]),([A-Z])\)",
-        lambda m: _canonical_angle(f"Angle({m.group(1)},{m.group(2)},{m.group(3)})"),
-        value,
-    )
-    # Replace compact form: Angle(XYZ) → canonical
-    value = re.sub(
-        r"Angle\(([A-Z]{3})\)",
-        lambda m: _canonical_angle(f"Angle({m.group(1)})"),
-        value,
-    )
-    return value
+    return canonicalize(value)
+
 
 
 def _split_top_args(inner: str) -> List[str]:

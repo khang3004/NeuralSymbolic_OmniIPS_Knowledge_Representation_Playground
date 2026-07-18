@@ -165,26 +165,56 @@ def llm_query_parser(query: str) -> Tuple[List[str], str]:
         system_prompt = (
             "You are a translation layer for a plane geometry Neuro-Symbolic reasoning engine (GeoIPS).\n"
             "Parse natural language geometry problems (in English or Vietnamese) into exact formal predicates.\n\n"
-            "Predicate Syntax Rules:\n"
-            "- Points are uppercase single letters: A, B, C, ...\n"
-            "- Segments: AB, BC, AC (two adjacent uppercase letters)\n"
-            "- Angles: Angle(BAC) means ∠BAC with vertex at A\n"
+            "=== PREDICATE SYNTAX RULES ===\n"
+            "- Points: uppercase single letters A, B, C, D, E, F, ...\n"
+            "- Segments: AB, BC (two adjacent uppercase letters, no space)\n"
+            "- Angles: Angle(BAC) — vertex is the MIDDLE letter (∠BAC has vertex A)\n"
             "- Triangle: Triangle(A,B,C)\n"
             "- Right Triangle: RightTriangle(A,B,C) + RightAngle(Angle(BAC)) for right angle at A\n"
-            "- Congruence: Congruent(AB,CD) — sort args alphabetically for commutativity\n"
-            "- Equality: Equal(Angle(ABC),Angle(DEF)) or Equal(x,60)\n"
+            "- SEGMENT congruence (2-letter args): Congruent(AB,CD) — AB ≅ CD\n"
+            "- TRIANGLE congruence (3-letter args): CongruentTriangles(ABC,DEF) — △ABC ≅ △DEF\n"
+            "  *** CRITICAL: 'hai tam giác bằng nhau' → CongruentTriangles, NOT Congruent ***\n"
+            "- Equality: Equal(Angle(ABC),Angle(DEF)) or Equal(Angle(ACB),50)\n"
             "- Parallel: Parallel(AB,CD)\n"
             "- Perpendicular: Perpendicular(AB,CD)\n"
-            "- Isosceles: Triangle(A,B,C) + Congruent(AB,AC) for isosceles with apex A\n"
-            "- Pythagorean equality: BC^2=AB^2+AC^2\n\n"
-            "Examples:\n"
-            "  'Cho tam giác ABC cân tại A. Chứng minh góc B bằng góc C'\n"
-            "  → initial_facts: ['Triangle(A,B,C)', 'Congruent(AB,AC)'], goal_fact: 'Equal(Angle(ABC),Angle(ACB))'\n\n"
-            "  'Given right triangle ABC with right angle at A, prove BC^2=AB^2+AC^2'\n"
-            "  → initial_facts: ['RightTriangle(A,B,C)', 'RightAngle(Angle(BAC))'], goal_fact: 'BC^2=AB^2+AC^2'\n\n"
-            "  'If Parallel(AB,CD) and Parallel(CD,EF), prove Parallel(AB,EF)'\n"
-            "  → initial_facts: ['Parallel(AB,CD)', 'Parallel(CD,EF)'], goal_fact: 'Parallel(AB,EF)'\n\n"
-            "Output ONLY the parsed structures. Do not solve the problem."
+            "- Isosceles: Triangle(A,B,C) + Congruent(AB,AC) for apex A\n"
+            "- Pythagorean: BC^2=AB^2+AC^2\n"
+            "- Circle: Circle(O,r) or PointOnCircle(P,Circle(O))\n"
+            "- Midpoint: Midpoint(M,AB)\n"
+            "- Foot/Altitude: Foot(H,A,BC) — H is the foot of the perpendicular from A to BC\n\n"
+            "=== CRITICAL DISTINCTION ===\n"
+            "Congruent(AB,DE)       ← SEGMENT congruence (2-letter args)\n"
+            "CongruentTriangles(ABC,DEF) ← TRIANGLE congruence (3-letter args)\n\n"
+            "=== EXAMPLES ===\n"
+            "'Cho tam giác ABC cân tại A. CM góc B bằng góc C'\n"
+            "→ facts: ['Triangle(A,B,C)', 'Congruent(AB,AC)'], goal: 'Equal(Angle(ABC),Angle(ACB))'\n\n"
+            "'Cho tam giác ABC và DEF. Biết AB=DE, AC=DF, góc BAC = góc EDF. CM △ABC bằng △DEF'\n"
+            "→ facts: ['Triangle(A,B,C)', 'Triangle(D,E,F)', 'Congruent(AB,DE)', 'Congruent(AC,DF)', 'Equal(Angle(BAC),Angle(EDF))'], goal: 'CongruentTriangles(ABC,DEF)'\n\n"
+            "'Cho tam giác ABC có AB=AC=BC. CM góc A bằng 60 độ'\n"
+            "→ facts: ['Triangle(A,B,C)', 'Congruent(AB,AC)', 'Congruent(AB,BC)'], goal: 'Equal(Angle(BAC),60)'\n\n"
+            "'Given right triangle ABC with right angle at A, prove BC^2=AB^2+AC^2'\n"
+            "→ facts: ['RightTriangle(A,B,C)', 'RightAngle(Angle(BAC))'], goal: 'BC^2=AB^2+AC^2'\n\n"
+            "'Cho tam giác ABC vuông tại A. H là hình chiếu của A lên BC. CM 1/AH^2 = 1/AB^2 + 1/AC^2'\n"
+            "→ facts: ['RightTriangle(A,B,C)', 'RightAngle(Angle(BAC))', 'Foot(H,A,BC)'], goal: '1/AH^2 = 1/AB^2 + 1/AC^2'\n\n"
+            "'If Parallel(AB,CD) and Parallel(CD,EF), prove Parallel(AB,EF)'\n"
+            "→ facts: ['Parallel(AB,CD)', 'Parallel(CD,EF)'], goal: 'Parallel(AB,EF)'\n\n"
+            "'Cho tam giác ABC. Biết góc A = 60, góc B = 70. CM góc C = 50'\n"
+            "→ facts: ['Triangle(A,B,C)', 'Equal(Angle(BAC),60)', 'Equal(Angle(ABC),70)'], goal: 'Equal(Angle(ACB),50)'\n\n"
+            "'Cho đường tròn O có hai dây cung AB và CD cắt nhau tại P. CM PA*PB = PC*PD'\n"
+            "→ facts: ['Circle(O)', 'PointOnCircle(A,Circle(O))', 'PointOnCircle(B,Circle(O))', 'PointOnCircle(C,Circle(O))', 'PointOnCircle(D,Circle(O))', 'IntersectionPoint(P,AB,CD)'], goal: 'Equal(PA*PB,PC*PD)'\n\n"
+            "'Cho điểm P nằm ngoài đường tròn O. Vẽ cát tuyến PAB và tiếp tuyến PT. CM PT^2 = PA*PB'\n"
+            "→ facts: ['Circle(O)', 'PointOutsideCircle(P,Circle(O))', 'TangentSegment(P,T,Circle(O))', 'SecantSegment(P,A,B,Circle(O))'], goal: 'Equal(PT^2,PA*PB)'\n\n"
+            "'Cho tứ giác ABCD là hình thoi. CM AC vuông góc BD'\n"
+            "→ facts: ['Rhombus(A,B,C,D)'], goal: 'Perpendicular(AC,BD)'\n\n"
+            "'Cho tứ giác nội tiếp ABCD. CM AC*BD = AB*CD + BC*AD'\n"
+            "→ facts: ['CyclicQuadrilateral(A,B,C,D)'], goal: 'AC*BD = AB*CD + BC*AD'\n\n"
+            "'Cho tam giác ABC. Các đường AD, BE, CF đồng quy tại P (với D trên BC, E trên AC, F trên AB). CM (BD/DC)*(CE/EA)*(AF/FB) = 1'\n"
+            "→ facts: ['Triangle(A,B,C)', 'PointOnSegment(D,B,C)', 'PointOnSegment(E,A,C)', 'PointOnSegment(F,A,B)', 'Concurrent(AD,BE,CF)'], goal: '(BD/DC)*(CE/EA)*(AF/FB) = 1'\n\n"
+            "'Cho tam giác ABC. Một đường thẳng cắt các đường BC, CA, AB tại D, E, F sao cho D, E, F thẳng hàng. CM (BD/DC)*(CE/EA)*(AF/FB) = 1'\n"
+            "→ facts: ['Triangle(A,B,C)', 'Collinear(D,E,F)', 'PointOnLine(D,B,C)', 'PointOnLine(E,C,A)', 'PointOnLine(F,A,B)'], goal: '(BD/DC)*(CE/EA)*(AF/FB) = 1'\n\n"
+            "'Cho tam giác ABC có đường tròn ngoại tiếp O. P là một điểm trên O. X, Y, Z là hình chiếu của P lên AB, BC, CA. CM X, Y, Z thẳng hàng'\n"
+            "→ facts: ['Triangle(A,B,C)', 'Circumcircle(O,A,B,C)', 'PointOnCircle(P,Circle(O))', 'Foot(X,P,AB)', 'Foot(Y,P,BC)', 'Foot(Z,P,CA)'], goal: 'Collinear(X,Y,Z)'\n\n"
+            "Output ONLY the parsed structures. Do NOT solve the problem."
         )
 
         prompt = ChatPromptTemplate.from_messages([
@@ -226,6 +256,18 @@ def llm_query_parser(query: str) -> Tuple[List[str], str]:
 # Qdrant semantic mapping
 # ---------------------------------------------------------------------------
 
+def _contains_numeric_value(text: str) -> bool:
+    """
+    Returns True if the predicate contains a literal numeric argument.
+    E.g. Equal(Angle(ACB),50) → True
+         Congruent(AB,CD)      → False
+
+    Facts with embedded numbers MUST be preserved verbatim — vector search
+    cannot safely remap them (e.g. it might turn 50° into 60° or 90°).
+    """
+    return bool(re.search(r",\s*-?\d+(\.\d+)?\s*[,)]", text))
+
+
 def map_text_to_graph_fact(
     text: str,
     qdrant_client,
@@ -234,10 +276,26 @@ def map_text_to_graph_fact(
     """
     Maps a raw text predicate to a canonical Fact using 2-tier Qdrant lookup:
     1. Exact payload scroll (zero overhead, perfect match).
-    2. High-confidence vector search (score >= 0.85 threshold).
+    2. High-confidence vector search (score >= 0.92 threshold).
     Falls back to ad-hoc Fact construction if Qdrant is unreachable.
+
+    IMPORTANT: Facts containing literal numeric values (e.g. Equal(Angle(ACB),50))
+    are NEVER remapped via vector search — the exact number must be preserved.
     """
     text = text.strip()
+
+    # ── Guard: numeric facts bypass ALL Qdrant remapping ────────────────────
+    # Vector search cannot distinguish Equal(X,50) from Equal(X,60) reliably.
+    # The number is semantically critical — use text verbatim.
+    if _contains_numeric_value(text):
+        logger.info("Numeric fact — bypassing Qdrant, using as-is: '%s'", text)
+        return Fact(
+            id=f"geo_fact_{abs(hash(text))}",
+            value=text,
+            domain=DOMAIN,
+            attributes={"label": text, "source": "numeric_bypass"},
+        )
+
     payload_match = None
 
     # Tier 1: Exact payload match
@@ -264,9 +322,15 @@ def map_text_to_graph_fact(
                 payload_match = lbl_results[0].payload
                 logger.info("Exact label match found for '%s'", text)
     except Exception as e:
-        logger.warning("Exact payload matching failed for '%s': %s", text, e)
+        err_str = str(e)
+        if "Index required" in err_str or "index" in err_str.lower():
+            # Qdrant Cloud payload index not yet created — skip to vector search
+            logger.debug("Qdrant scroll requires payload index (not created): skipping to vector search for '%s'", text)
+        else:
+            logger.warning("Exact payload matching failed for '%s': %s", text, e)
 
     # Tier 2: High-confidence vector search
+    # Threshold raised to 0.92 to avoid false-positive structural remapping
     if not payload_match:
         try:
             model = _get_embedding_model()
@@ -278,16 +342,25 @@ def map_text_to_graph_fact(
             )
             if results.points:
                 match = results.points[0]
-                HIGH_CONFIDENCE_THRESHOLD = 0.85
+                HIGH_CONFIDENCE_THRESHOLD = 0.92
                 if match.score >= HIGH_CONFIDENCE_THRESHOLD:
-                    payload_match = match.payload
-                    logger.info(
-                        "High-confidence vector match (%.4f) found for '%s'",
-                        match.score, text
-                    )
+                    matched_value = (match.payload or {}).get("value", "")
+                    # Reject variable-pattern matches (e.g. Parallel(?AB,?EF))
+                    # These are rule templates, NOT concrete facts.
+                    if "?" in matched_value:
+                        logger.info(
+                            "Rejected variable-pattern Qdrant match '%s' for '%s' — using ad-hoc",
+                            matched_value, text
+                        )
+                    else:
+                        payload_match = match.payload
+                        logger.info(
+                            "High-confidence vector match (%.4f) found for '%s'",
+                            match.score, text
+                        )
                 else:
                     logger.info(
-                        "Vector match score %.4f below threshold %.2f for '%s'",
+                        "Vector match score %.4f below threshold %.2f for '%s' — using ad-hoc",
                         match.score, HIGH_CONFIDENCE_THRESHOLD, text
                     )
         except Exception as e:
@@ -305,6 +378,10 @@ def map_text_to_graph_fact(
         neo4j_id = f"geo_fact_{abs(hash(text))}"
         logger.info("Ad-hoc fallback for '%s'", text)
 
+    # ALWAYS canonicalize final value using ExprParser
+    from core_engine.arithmetic_evaluator import canonicalize
+    canonical_value = canonicalize(canonical_value)
+
     return Fact(
         id=neo4j_id,
         value=canonical_value,
@@ -313,9 +390,41 @@ def map_text_to_graph_fact(
     )
 
 
+
 # ---------------------------------------------------------------------------
 # Public entrypoint
 # ---------------------------------------------------------------------------
+
+def _normalize_predicate(text: str) -> str:
+    """
+    Post-process a predicate string to fix common LLM mis-translations:
+
+    1. Congruent(XYZ,UVW) where XYZ/UVW are 3-char → CongruentTriangles(XYZ,UVW)
+       LLMs frequently output 'Congruent' for triangle congruence instead of
+       'CongruentTriangles'. This normalizes it to the correct predicate.
+
+    2. Similar(XYZ,UVW) → SimilarTriangles(XYZ,UVW) (same issue)
+    """
+    # Fix Congruent(3-char, 3-char) → CongruentTriangles
+    text = re.sub(
+        r"\bCongruent\(([A-Z]{3}),([A-Z]{3})\)",
+        r"CongruentTriangles(\1,\2)",
+        text
+    )
+    # Fix Similar(3-char, 3-char) → SimilarTriangles
+    text = re.sub(
+        r"\bSimilar\(([A-Z]{3}),([A-Z]{3})\)",
+        r"SimilarTriangles(\1,\2)",
+        text
+    )
+    # Fix Intersection(P, AB, CD) → IntersectionPoint(P, AB, CD)
+    text = re.sub(
+        r"\bIntersection\(([A-Z]),([A-Z]{2}),([A-Z]{2})\)",
+        r"IntersectionPoint(\1,\2,\3)",
+        text
+    )
+    return text
+
 
 def route_query(query: str) -> Tuple[List[Fact], Fact]:
     """
@@ -331,7 +440,13 @@ def route_query(query: str) -> Tuple[List[Fact], Fact]:
     # Step 1: Parse text → structured predicates
     facts_text, goal_text = llm_query_parser(query)
 
-    # Step 2: Connect to Qdrant (cloud or local via factory)
+    # Step 2: Normalize predicates — fix common LLM mis-translations
+    # (e.g. Congruent(ABC,DEF) → CongruentTriangles(ABC,DEF))
+    facts_text = [_normalize_predicate(f) for f in facts_text]
+    goal_text = _normalize_predicate(goal_text)
+    logger.info("[Normalize] facts: %s  goal: %s", facts_text, goal_text)
+
+    # Step 3: Connect to Qdrant (cloud or local via factory)
     qdrant = None
     for attempt in range(1, 4):
         try:
@@ -347,21 +462,23 @@ def route_query(query: str) -> Tuple[List[Fact], Fact]:
             else:
                 time.sleep(1.0 * attempt)
 
-    # Step 3: Map text predicates → Fact objects
+    # Step 4: Map text predicates → Fact objects
     mapped_facts: List[Fact] = []
     for f_text in facts_text:
         if qdrant:
             mapped_facts.append(map_text_to_graph_fact(f_text, qdrant))
         else:
+            from core_engine.arithmetic_evaluator import canonicalize
             mapped_facts.append(
-                Fact(id=f"geo_fact_{abs(hash(f_text))}", value=f_text, domain=DOMAIN)
+                Fact(id=f"geo_fact_{abs(hash(f_text))}", value=canonicalize(f_text), domain=DOMAIN)
             )
 
     if qdrant and goal_text:
         mapped_goal = map_text_to_graph_fact(goal_text, qdrant)
     else:
+        from core_engine.arithmetic_evaluator import canonicalize
         mapped_goal = Fact(
-            id=f"geo_fact_{abs(hash(goal_text))}", value=goal_text, domain=DOMAIN
+            id=f"geo_fact_{abs(hash(goal_text))}", value=canonicalize(goal_text), domain=DOMAIN
         )
 
     # Deduplicate facts, remove goal if it slipped in
