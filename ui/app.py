@@ -68,6 +68,37 @@ def solve_query(query: str, use_aux_agent: bool = True) -> dict:
         return {"error": f"❌ Unexpected error: {str(e)}"}
 
 
+def clean_latex(text: str) -> str:
+    """Replace common LLM LaTeX delimiters with standard Streamlit dollar signs."""
+    if not text:
+        return text
+    return text.replace("\\[", "$$").replace("\\]", "$$").replace("\\(", "$").replace("\\)", "$")
+
+
+def format_latex_stream(stream):
+    """
+    Wrap a stream generator and replace:
+    - \\[ -> $$
+    - \\] -> $$
+    - \\( -> $
+    - \\) -> $
+    """
+    buffer = ""
+    for chunk in stream:
+        buffer += chunk
+        buffer = buffer.replace("\\[", "$$").replace("\\]", "$$").replace("\\(", "$").replace("\\)", "$")
+        if buffer.endswith("\\"):
+            to_yield = buffer[:-1]
+            buffer = "\\"
+        else:
+            to_yield = buffer
+            buffer = ""
+        if to_yield:
+            yield to_yield
+    if buffer:
+        yield buffer
+
+
 def explain_proof_stream(query: str, execution_trace: list, goal_reached: bool, aux_constructions: list):
     """Stream proof explanation from backend."""
     try:
@@ -383,7 +414,7 @@ for msg in st.session_state.messages:
                 # LLM Explanation
                 st.markdown("---")
                 if explanation:
-                    st.markdown(explanation)
+                    st.markdown(clean_latex(explanation))
                 else:
                     st.info("No explanation generated.")
 
@@ -480,7 +511,9 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
             trace_data = result.get("execution_trace", [])
             if trace_data or aux_constructions:
                 explanation_str = st.write_stream(
-                    explain_proof_stream(user_msg, trace_data, goal_reached, aux_constructions)
+                    format_latex_stream(
+                        explain_proof_stream(user_msg, trace_data, goal_reached, aux_constructions)
+                    )
                 )
             else:
                 explanation_str = (
