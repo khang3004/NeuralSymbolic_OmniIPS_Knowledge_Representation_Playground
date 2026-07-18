@@ -107,6 +107,71 @@ FALLBACK_GEOMETRY_RULES = [
     {"id": "geo_congruent_tri_sides", "name": "Congruent Triangles → Sides", "inputs": ["CongruentTriangles(ABC,DEF)"], "outputs": ["Congruent(AB,DE)", "Congruent(BC,EF)", "Congruent(AC,DF)"], "description": "Congruent triangles have congruent sides."},
     {"id": "geo_congruent_tri_angles", "name": "Congruent Triangles → Angles", "inputs": ["CongruentTriangles(ABC,DEF)"], "outputs": ["Equal(Angle(BAC),Angle(EDF))", "Equal(Angle(ABC),Angle(DEF))", "Equal(Angle(ACB),Angle(DFE))"], "description": "Congruent triangles have equal angles."},
     {"id": "geo_midpoint_theorem", "name": "Midsegment Theorem", "inputs": ["Triangle(A,B,C)", "Midpoint(M,AB)", "Midpoint(N,AC)"], "outputs": ["Parallel(MN,BC)", "Equal(Length(MN),Div(Length(BC),2))"], "description": "Midsegment is parallel to base and half its length."},
+
+    # ── Equality algebra ──────────────────────────────────────────────────────
+    {"id": "geo_equal_symmetric", "name": "Equality Symmetric",
+     "inputs": ["Equal(?X,?Y)"], "outputs": ["Equal(?Y,?X)"],
+     "description": "If a=b then b=a."},
+    {"id": "geo_equal_transitive", "name": "Equality Transitive",
+     "inputs": ["Equal(?X,?Y)", "Equal(?Y,?Z)"], "outputs": ["Equal(?X,?Z)"],
+     "description": "If a=b and b=c then a=c."},
+
+    # ── Right-angle facts ─────────────────────────────────────────────────────
+    {"id": "geo_right_angle_90", "name": "Right Angle is 90",
+     "inputs": ["RightAngle(Angle(?X))"],
+     "outputs": ["Equal(Angle(?X),90)"],
+     "description": "A right angle equals 90 degrees."},
+    {"id": "geo_right_triangle_expand", "name": "RightTriangle Expand",
+     "inputs": ["RightTriangle(A,B,C)"],
+     "outputs": ["Triangle(A,B,C)", "RightAngle(Angle(BAC))"],
+     "description": "Right triangle at A implies Triangle + RightAngle at A."},
+
+    # ── Exterior angle theorem ────────────────────────────────────────────────
+    {"id": "geo_exterior_angle", "name": "Exterior Angle Theorem",
+     "inputs": ["Triangle(A,B,C)", "ExteriorAngle(?E,A,BC)"],
+     "outputs": ["Equal(Angle(?E),Add(Angle(BAC),Angle(ABC)))"],
+     "description": "Exterior angle = sum of two non-adjacent interior angles."},
+
+    # ── Equilateral triangle ──────────────────────────────────────────────────
+    {"id": "geo_equilateral_all_60", "name": "Equilateral Triangle Angles",
+     "inputs": ["Triangle(A,B,C)", "Congruent(AB,BC)", "Congruent(BC,AC)"],
+     "outputs": ["Equal(Angle(BAC),60)", "Equal(Angle(ABC),60)", "Equal(Angle(ACB),60)"],
+     "description": "All angles of equilateral triangle = 60 degrees."},
+
+    # ── Circle theorems ───────────────────────────────────────────────────────
+    {"id": "geo_thales_right_angle", "name": "Thales: Angle in Semicircle",
+     "inputs": ["Diameter(AB,Circle(O))", "PointOnCircle(C,Circle(O))"],
+     "outputs": ["RightAngle(Angle(ACB))", "Equal(Angle(ACB),90)"],
+     "description": "Angle inscribed in a semicircle is 90 degrees."},
+    {"id": "geo_cyclic_quad_opposite", "name": "Cyclic Quadrilateral Opposite Angles",
+     "inputs": ["CyclicQuadrilateral(A,B,C,D,Circle(O))"],
+     "outputs": ["Equal(Add(Angle(DAB),Angle(BCD)),180)",
+                 "Equal(Add(Angle(ABC),Angle(CDA)),180)"],
+     "description": "Opposite angles of a cyclic quadrilateral sum to 180 degrees."},
+
+    # ── AA Similarity ─────────────────────────────────────────────────────────
+    {"id": "geo_aa_similarity", "name": "AA Similarity",
+     "inputs": ["Triangle(A,B,C)", "Triangle(D,E,F)",
+                "Equal(Angle(BAC),Angle(EDF))", "Equal(Angle(ABC),Angle(DEF))"],
+     "outputs": ["SimilarTriangles(ABC,DEF)"],
+     "description": "Two triangles with two equal angles are similar (AA)."},
+    {"id": "geo_similar_tri_angles", "name": "Similar Triangles: Equal Angles",
+     "inputs": ["SimilarTriangles(ABC,DEF)"],
+     "outputs": ["Equal(Angle(BAC),Angle(EDF))", "Equal(Angle(ABC),Angle(DEF))",
+                 "Equal(Angle(ACB),Angle(DFE))"],
+     "description": "Similar triangles have equal corresponding angles."},
+    {"id": "geo_similar_tri_ratios", "name": "Similar Triangles: Proportional Sides",
+     "inputs": ["SimilarTriangles(ABC,DEF)"],
+     "outputs": ["Equal(Div(Length(AB),Length(DE)),Div(Length(BC),Length(EF)))",
+                 "Equal(Div(Length(AB),Length(DE)),Div(Length(AC),Length(DF)))"],
+     "description": "Similar triangles have proportional corresponding sides."},
+
+    # ── Midpoint ──────────────────────────────────────────────────────────────
+    {"id": "geo_midpoint_halves", "name": "Midpoint Halves Segment",
+     "inputs": ["Midpoint(M,AB)"],
+     "outputs": ["Equal(Length(AM),Length(MB))",
+                 "Equal(Length(AM),Div(Length(AB),2))"],
+     "description": "Midpoint divides segment into two equal halves."},
 ]
 
 

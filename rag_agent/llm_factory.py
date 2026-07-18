@@ -123,38 +123,82 @@ def get_llm(temperature: float = 0.3) -> Optional[object]:
     elif provider == "groq":
         from langchain_groq import ChatGroq
         
-        final_key = api_key or groq_rotator.get_next_key()
-        if not final_key:
+        # Collect all valid Groq keys
+        groq_keys = []
+        for i in range(1, 11):
+            k = os.getenv(f"GROQ_API_KEY_{i}")
+            if k and k.strip() and "your_" not in k:
+                groq_keys.append(k.strip())
+        std_key = os.getenv("GROQ_API_KEY")
+        if std_key and std_key.strip() and "your_" not in std_key and std_key.strip() not in groq_keys:
+            groq_keys.append(std_key.strip())
+            
+        if api_key:
+            groq_keys = [api_key] + groq_keys
+            
+        if not groq_keys:
             logger.warning("Groq API Key is missing. Falling back to offline mode.")
             return None
             
-        try:
-            return ChatGroq(
-                model=model,
-                temperature=temperature,
-                api_key=final_key
-            )
-        except Exception as e:
-            logger.error("Failed to initialize ChatGroq: %s", e)
+        # Build models with fallbacks
+        models = []
+        for idx, k in enumerate(groq_keys):
+            try:
+                models.append(ChatGroq(
+                    model=model,
+                    temperature=temperature,
+                    api_key=k
+                ))
+            except Exception as e:
+                logger.error("Failed to initialize ChatGroq instance %d: %s", idx + 1, e)
+                
+        if not models:
             return None
+        if len(models) == 1:
+            return models[0]
+            
+        logger.info("Configured Groq provider with %d fallback API keys.", len(models))
+        return models[0].with_fallbacks(models[1:])
             
     elif provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
         
-        final_key = api_key or gemini_rotator.get_next_key() or os.getenv("GOOGLE_API_KEY")
-        if not final_key:
+        # Collect all valid Gemini keys
+        gemini_keys = []
+        for i in range(1, 11):
+            k = os.getenv(f"GEMINI_API_KEY_{i}")
+            if k and k.strip() and "your_" not in k:
+                gemini_keys.append(k.strip())
+        std_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if std_key and std_key.strip() and "your_" not in std_key and std_key.strip() not in gemini_keys:
+            gemini_keys.append(std_key.strip())
+            
+        if api_key:
+            gemini_keys = [api_key] + gemini_keys
+            
+        if not gemini_keys:
             logger.warning("Google/Gemini API Key is missing. Falling back to offline mode.")
             return None
             
-        try:
-            return ChatGoogleGenerativeAI(
-                model=model,
-                temperature=temperature,
-                google_api_key=final_key
-            )
-        except Exception as e:
-            logger.error("Failed to initialize ChatGoogleGenerativeAI: %s", e)
+        # Build models with fallbacks
+        models = []
+        for idx, k in enumerate(gemini_keys):
+            try:
+                models.append(ChatGoogleGenerativeAI(
+                    model=model,
+                    temperature=temperature,
+                    google_api_key=k
+                ))
+            except Exception as e:
+                logger.error("Failed to initialize ChatGoogleGenerativeAI instance %d: %s", idx + 1, e)
+                
+        if not models:
             return None
+        if len(models) == 1:
+            return models[0]
+            
+        logger.info("Configured Google provider with %d fallback API keys.", len(models))
+        return models[0].with_fallbacks(models[1:])
             
     else:
         logger.warning("Unsupported LLM provider: '%s'. Supported: openai, ollama, groq, google.", provider)

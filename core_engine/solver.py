@@ -6,6 +6,9 @@ Upgraded from propositional exact matching to support:
 - Variable rules (containing '?' variables): unification-based matching
   via GeometryUnifier, enabling general rules like
   Congruent(?X,?Y) → Congruent(?Y,?X) to fire for any fact pair.
+- Arithmetic inference: Equal(Add(X,Y,Z),180) + Equal(X,60) + Equal(Y,70)
+  → derives Equal(Z,50) automatically, enabling numeric goals like
+  Equal(Angle(ACB),50) to be resolved.
 
 Both engines are domain-agnostic and operate strictly on Fact/Rule abstractions.
 """
@@ -15,18 +18,23 @@ from typing import List, Set, Optional, Dict
 
 from core_engine.models import Fact, Rule, ExecutionStep, InferenceResult
 from core_engine.unifier import find_rule_bindings, instantiate_consequents, has_variables
+from core_engine.arithmetic_evaluator import ArithmeticEvaluator, check_numeric_goal
 
 
 class ForwardChainingEngine:
     """
-    Domain-agnostic forward-chaining solver with unification support.
+    Domain-agnostic forward-chaining solver with unification support
+    and integrated arithmetic evaluation.
 
     Algorithm:
     1. Add all initial_facts to Working Memory.
-    2. Iterate through rules. For each unfired rule:
+    2. Run ArithmeticEvaluator to derive numeric facts from Equal(Add(...), n).
+    3. Iterate through rules. For each unfired rule:
        a. Find all valid bindings (propositional or unification-based).
        b. For each binding, instantiate consequents and add to WM.
-    3. Repeat until no new facts can be derived (saturation) or goal is reached.
+    4. After each rule-firing pass, run ArithmeticEvaluator again.
+    5. Check goal using both exact string match and numeric equivalence.
+    6. Repeat until no new facts can be derived (saturation) or goal is reached.
     """
 
     def __init__(self, rules: List[Rule]):
@@ -37,34 +45,62 @@ class ForwardChainingEngine:
         applied_rule_ids: List[str] = []
         execution_trace: List[ExecutionStep] = []
 
+        # Arithmetic evaluator runs across all iterations
+        arith = ArithmeticEvaluator()
+
+        def _wm_values() -> List[str]:
+            return [f.value for f in working_memory]
+
+        def _check_goal() -> bool:
+            if not goal:
+                return False
+            if goal in working_memory:
+                return True
+            # Numeric equivalence check (e.g. Equal(Angle(ACB),50) via registry)
+            return check_numeric_goal(goal.value, _wm_values(), arith.registry)
+
+        def _run_arithmetic():
+            """Derive new numeric facts and add them to WM."""
+            new_strs = arith.derive_new_facts(_wm_values())
+            added = False
+            for s in new_strs:
+                new_f = Fact(
+                    id=f"arith_{abs(hash(s))}",
+                    value=s,
+                    domain=initial_facts[0].domain if initial_facts else "geometry",
+                )
+                if new_f not in working_memory:
+                    working_memory.add(new_f)
+                    added = True
+            return added
+
+        # Initial arithmetic pass
+        _run_arithmetic()
+
         # Early exit: goal already satisfied
-        if goal and goal in working_memory:
+        if _check_goal():
             return InferenceResult(
                 goal_reached=True,
                 final_facts=list(working_memory),
                 execution_trace=execution_trace,
-                applied_rule_ids=applied_rule_ids
+                applied_rule_ids=applied_rule_ids,
             )
 
         changed = True
         while changed:
             changed = False
             for rule in self.rules:
-                # Find all valid bindings for this rule against current WM
                 bindings = find_rule_bindings(rule, working_memory)
                 if not bindings:
                     continue
 
-                rule_fired_this_iteration = False
                 for binding in bindings:
-                    # Instantiate consequents with binding
                     consequents = instantiate_consequents(rule, binding, rule.domain)
                     new_inferred = [f for f in consequents if f not in working_memory]
 
                     if new_inferred:
                         working_memory.update(consequents)
                         changed = True
-                        rule_fired_this_iteration = True
 
                         if rule.id not in applied_rule_ids:
                             applied_rule_ids.append(rule.id)
@@ -72,23 +108,33 @@ class ForwardChainingEngine:
                                 rule_id=rule.id,
                                 fired_rule_repr=repr(rule),
                                 new_facts=new_inferred,
-                                timestamp_ms=time.time() * 1000
+                                timestamp_ms=time.time() * 1000,
                             ))
 
-                        # Check goal
-                        if goal and goal in working_memory:
+                        if _check_goal():
                             return InferenceResult(
                                 goal_reached=True,
                                 final_facts=list(working_memory),
                                 execution_trace=execution_trace,
-                                applied_rule_ids=applied_rule_ids
+                                applied_rule_ids=applied_rule_ids,
                             )
+
+            # After each rule-firing pass, run arithmetic derivation
+            if _run_arithmetic():
+                changed = True  # New numeric facts may enable more rules
+                if _check_goal():
+                    return InferenceResult(
+                        goal_reached=True,
+                        final_facts=list(working_memory),
+                        execution_trace=execution_trace,
+                        applied_rule_ids=applied_rule_ids,
+                    )
 
         return InferenceResult(
             goal_reached=False if goal else None,
             final_facts=list(working_memory),
             execution_trace=execution_trace,
-            applied_rule_ids=applied_rule_ids
+            applied_rule_ids=applied_rule_ids,
         )
 
 
