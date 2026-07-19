@@ -139,6 +139,8 @@ class ExprParser:
                 if lhs_is_alg or rhs_is_alg:
                     lhs = canonicalize(lhs, True)
                     rhs = canonicalize(rhs, True)
+            if lhs > rhs:
+                lhs, rhs = rhs, lhs
             return f"Equal({lhs},{rhs})"
 
         commutative_relations = {
@@ -300,13 +302,17 @@ def _parse_pred(expr: str) -> Optional[Tuple[str, List[str]]]:
 
 def _extract_equal_pairs(wm_values: List[str]) -> List[Tuple[str, str]]:
     """Extract all Equal(lhs, rhs) pairs from a list of fact value strings.
-    Normalizes angle notation before matching."""
+    Handles both Equal(expr, val) and Equal(val, expr) robustly."""
     pairs = []
     for v in wm_values:
         v2 = normalize_fact_value(v.strip().replace(" ", ""))
-        m = re.fullmatch(r"Equal\((.+),([^,()]+)\)", v2)
-        if m:
-            pairs.append((m.group(1).strip(), m.group(2).strip()))
+        parsed = _parse_pred(v2)
+        if parsed and parsed[0] == "Equal" and len(parsed[1]) == 2:
+            arg1, arg2 = parsed[1][0].strip(), parsed[1][1].strip()
+            if _is_numeric(arg1) and not _is_numeric(arg2):
+                pairs.append((arg2, arg1))
+            else:
+                pairs.append((arg1, arg2))
     return pairs
 
 

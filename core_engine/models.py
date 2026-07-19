@@ -3,15 +3,14 @@ from typing import List, Dict, Any, Optional
 
 class Fact(BaseModel):
     """
-    Strictly-typed schema representing a single logical assertion or concept.
+    Strictly-typed schema representing a single geometric assertion or predicate.
     """
     id: str = Field(..., description="Unique identifier for the fact")
-    value: str = Field(..., description="Raw string value of the assertion, e.g., 'H2O' or 'Congruent(AB, CD)'")
-    domain: str = Field(..., description="Logical domain name, e.g., 'chemistry', 'geometry', 'algebra'")
-    attributes: Dict[str, Any] = Field(default_factory=dict, description="Metadata dictionary for domain-specific attributes")
+    value: str = Field(..., description="Raw string value of the assertion, e.g., 'Congruent(AB, CD)'")
+    domain: str = Field("geometry", description="Logical domain name (default: geometry)")
+    attributes: Dict[str, Any] = Field(default_factory=dict, description="Metadata dictionary for geometric attributes")
 
     def __hash__(self) -> int:
-        # Standardizing hash for unique set inclusion in Working Memory (based on semantic content)
         return hash((self.value, self.domain))
 
     def __eq__(self, other: Any) -> bool:
@@ -22,14 +21,14 @@ class Fact(BaseModel):
 
 class Rule(BaseModel):
     """
-    Strictly-typed schema representing a symbolic production rule (antecedents -> consequents).
+    Strictly-typed schema representing a symbolic geometric production rule (antecedents -> consequents).
     """
-    id: str = Field(..., description="Unique rule identifier, e.g., 'r_substitute'")
-    name: str = Field(..., description="Human-readable rule name, e.g., 'Substitution Property'")
-    domain: str = Field(..., description="Logical domain name")
-    antecedents: List[Fact] = Field(..., description="Reactants or preconditions required for the rule to fire")
-    consequents: List[Fact] = Field(..., description="Products or conclusions generated when the rule fires")
-    description: Optional[str] = Field(None, description="Detailed explanation of the rule for RAG and UX purposes")
+    id: str = Field(..., description="Unique rule identifier, e.g., 'geo_sas_congruence'")
+    name: str = Field(..., description="Human-readable rule name, e.g., 'SAS Triangle Congruence'")
+    domain: str = Field("geometry", description="Logical domain name (default: geometry)")
+    antecedents: List[Fact] = Field(..., description="Preconditions required for the rule to fire")
+    consequents: List[Fact] = Field(..., description="Conclusions generated when the rule fires")
+    description: Optional[str] = Field(None, description="Detailed explanation of the geometric theorem")
 
     def __repr__(self) -> str:
         ants = " + ".join([f.value for f in self.antecedents])

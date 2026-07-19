@@ -10,7 +10,7 @@ class DomainParser(ABC):
     @abstractmethod
     def domain_name(self) -> str:
         """
-        Returns the domain identifier string (e.g., 'chemistry', 'geometry', 'algebra').
+        Returns the domain identifier string (e.g., 'geometry').
         """
         pass
 

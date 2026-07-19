@@ -2,68 +2,51 @@
 
 ## Supported Versions
 
-The following versions of Omni-IPS are currently supported with security updates:
+The following versions of **AlphaGeometry-IMO** are currently supported with security updates:
 
 | Version | Supported          |
 |---------|--------------------|
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 2.x.x   | :white_check_mark: |
+| < 2.0   | :x:                |
 
 ---
 
 ## Reporting a Vulnerability
 
-We take security vulnerabilities seriously. If you discover a security issue in this repository, **please do not open a public GitHub Issue**.
+We take the security of AlphaGeometry-IMO seriously. If you discover a security vulnerability in this repository, **please do not open a public GitHub Issue**.
 
 ### How to Report
 
-Please use one of the following private channels:
+Please use one of the following private reporting channels:
 
 1. **GitHub Private Vulnerability Reporting** (Preferred):
-   - Go to the [Security tab](../../security/advisories/new) of this repository
-   - Click **"Report a vulnerability"**
-   - Fill in the vulnerability details
+   - Go to the [Security tab](../../security/advisories/new) of this repository.
+   - Click **"Report a vulnerability"**.
+   - Fill in the details.
 
-2. **Email** (Alternative):
-   - Send details to the repository maintainer via GitHub profile contact
-   - Subject line: `[SECURITY] Omni-IPS Vulnerability Report`
+2. **Email Contact** (Alternative):
+   - Contact the maintainer via GitHub profile details.
+   - Subject line: `[SECURITY] AlphaGeometry-IMO Vulnerability Report`
 
-### What to Include
+### Information to Include
 
-Please include the following information in your report:
-
-- **Description**: A clear description of the vulnerability
-- **Affected Component**: Which module/file/endpoint is affected (e.g., `api/main.py`, `/api/solve` endpoint)
-- **Reproduction Steps**: Step-by-step instructions to reproduce the issue
-- **Impact Assessment**: The potential impact (e.g., data exposure, RCE, DoS)
-- **CVSS Score** (if applicable): Estimated severity using [CVSS v3.1](https://www.first.org/cvss/calculator/3.1)
-- **Suggested Fix** (optional): If you have a proposed fix or mitigation
-- **Environment**: Python version, OS, Docker version, relevant config
+Please include:
+- **Description**: Clear summary of the vulnerability.
+- **Affected Component**: Which module/file/endpoint is affected (e.g., `api/main.py`, `/geo/solve` endpoint, `rag_agent/router.py`).
+- **Reproduction Steps**: Step-by-step instructions to reproduce the issue.
+- **Impact Assessment**: Potential severity (e.g., Prompt Injection, Denial of Service, Credential Leakage).
+- **Environment**: Python version, OS, Docker version, relevant `.env` configuration.
 
 ---
 
-## Response Timeline
+## Response SLA Timeline
 
-| Stage | Timeline |
-|-------|----------|
-| Initial acknowledgement | Within **48 hours** |
-| Vulnerability assessment | Within **5 business days** |
-| Patch development | Within **14 business days** (critical: 7 days) |
-| Public disclosure | After patch is released and users are notified |
-
----
-
-## Vulnerability Severity Classification
-
-We classify vulnerabilities using the CVSS v3.1 standard:
-
-| Severity | CVSS Score | Response SLA |
-|----------|------------|-------------|
-| **Critical** | 9.0 - 10.0 | 7 days |
-| **High** | 7.0 - 8.9 | 14 days |
-| **Medium** | 4.0 - 6.9 | 30 days |
-| **Low** | 0.1 - 3.9 | 60 days |
-| **Informational** | 0.0 | Next release |
+| Stage | SLA Timeline |
+|-------|--------------|
+| Initial Acknowledgement | Within **48 hours** |
+| Vulnerability Assessment | Within **5 business days** |
+| Patch Development | Within **14 business days** (Critical: 7 days) |
+| Public Disclosure | After patch release and user notification |
 
 ---
 
@@ -73,74 +56,42 @@ We classify vulnerabilities using the CVSS v3.1 standard:
 
 The following components are within scope for security reports:
 
-- **FastAPI REST endpoints** (`api/main.py`) — injection, auth bypass, DoS
-- **Prolog inference engine** (`inference_engine/`) — malformed input, logic injection
-- **Neo4j integration** (`knowledge_base/`) — Cypher injection, data leakage
-- **Qdrant vector store** (`rag/`) — data poisoning, unauthorized access
-- **Docker configuration** (`docker-compose.yml`, `Dockerfile`) — privilege escalation, secrets exposure
-- **Environment variables / secrets** (`.env` handling) — credential leakage
-- **GraphRAG pipeline** (`rag/graph_rag.py`) — prompt injection, LLM manipulation
+- **FastAPI REST Endpoints** (`api/main.py`) — Input validation, endpoint security, rate limiting, DoS protection.
+- **Symbolic Core & Unifier** (`core_engine/`) — Malformed predicate input handling, recursion limits.
+- **Auxiliary Agent & LLM Router** (`geo_engine/auxiliary_agent.py`, `rag_agent/router.py`) — Prompt injection, unverified auxiliary construction validation.
+- **Neo4j Integration** (`graph_db/connection.py`) — Cypher query sanitization, parameter binding.
+- **Qdrant Vector DB** (`graph_db/qdrant_factory.py`) — Vector payload filtering, authorization.
+- **Docker Infrastructure** (`docker-compose.yml`, `Dockerfile`) — Container privilege isolation, environment secret handling.
+- **Environment Variables** (`.env` handling) — Sensitive API key exposure (`GEMINI_API_KEY`, `NEO4J_PASSWORD`).
 
 ### Out of Scope
 
-- Vulnerabilities in third-party dependencies (report upstream to the respective project)
-- Social engineering attacks
-- Physical security issues
-- Issues in forked or modified versions of this repository
-- Denial of Service via resource exhaustion (unless a specific exploit is demonstrated)
+- Vulnerabilities in third-party dependencies (report directly to upstream maintainers).
+- Social engineering or physical security attacks.
+- Issues in modified or uncommitted local forks.
 
 ---
 
-## Security Best Practices for Deployment
+## Security Best Practices for Production Deployment
 
-When deploying Omni-IPS in production, follow these guidelines:
-
-### Environment Variables
+### 1. Secret & Key Management
 ```bash
 # Never commit .env files to version control
-# Use secrets management (e.g., GitHub Secrets, HashiCorp Vault, AWS Secrets Manager)
+# Use dedicated secrets management (GitHub Secrets, Vault, Cloud KMS)
+GEMINI_API_KEY=<stored-in-secrets-manager>
 NEO4J_PASSWORD=<use-strong-random-password>
-OPENAI_API_KEY=<stored-in-secrets-manager>
-QDRANT_API_KEY=<stored-in-secrets-manager>
 ```
 
-### Network Security
-- Run Neo4j and Qdrant on internal Docker network only (not exposed to public internet)
-- Use a reverse proxy (Nginx/Traefik) with TLS termination in front of the FastAPI service
-- Restrict Neo4j bolt port (`7687`) and Qdrant port (`6333`) to localhost or private network
+### 2. Network Isolation
+- Restrict Neo4j Bolt (`7687`) and Qdrant (`6333`) ports to local container networks or private VPCs.
+- Deploy a reverse proxy (e.g. Traefik / Nginx) with TLS termination in front of `api/main.py`.
 
-### API Security
-- Enable rate limiting on the FastAPI application
-- Use API keys or JWT authentication for production deployments
-- Validate and sanitize all inputs to `/solve`, `/api/solve`, and `/api/explain` endpoints
-
-### Docker Security
-- Run containers as non-root users
-- Use read-only filesystem mounts where possible
-- Regularly update base images
-
----
-
-## Disclosure Policy
-
-This project follows **Coordinated Vulnerability Disclosure (CVD)**:
-
-1. Reporter submits vulnerability privately
-2. Maintainer acknowledges and investigates
-3. Fix is developed and tested
-4. Security advisory is published on GitHub with CVE (if applicable)
-5. Reporter is credited (unless they prefer anonymity)
+### 3. API Input Sanitization
+- Validate all incoming natural language and predicate inputs at the FastAPI model layer.
+- Enforce strict timeouts on LLM API calls and symbolic solver iterations.
 
 ---
 
 ## Security Contact
 
 Maintainer: **[@khang3004](https://github.com/khang3004)**
-
-For sensitive security communications, please use the [GitHub Private Vulnerability Reporting](../../security/advisories/new) feature.
-
----
-
-## Acknowledgements
-
-We sincerely thank all security researchers who responsibly disclose vulnerabilities and help improve the security of Omni-IPS.
