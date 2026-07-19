@@ -475,6 +475,10 @@ def route_query(query: str) -> Tuple[List[Fact], Fact]:
 
     if qdrant and goal_text:
         mapped_goal = map_text_to_graph_fact(goal_text, qdrant)
+        from core_engine.arithmetic_evaluator import canonicalize
+        mapped_goal = Fact(
+            id=mapped_goal.id, value=canonicalize(mapped_goal.value), domain=DOMAIN
+        )
     else:
         from core_engine.arithmetic_evaluator import canonicalize
         mapped_goal = Fact(

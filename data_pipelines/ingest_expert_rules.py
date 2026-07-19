@@ -207,6 +207,75 @@ EXPERT_RULES = [
         "inputs": ["Triangle(?A,?B,?C)", "PointOnCircle(?P,Circle(?O))", "Circumcircle(Circle(?O),Triangle(?A,?B,?C))", "Foot(?X,?P,Segment(?A,?B))", "Foot(?Y,?P,Segment(?B,?C))", "Foot(?Z,?P,Segment(?A,?C))"],
         "outputs": ["Collinear(?X,?Y,?Z)"],
         "description": "The feet of the perpendiculars from a point on the circumcircle to the sides of a triangle are collinear."
+    },
+
+    # --- 7. IMO & OLYMPIAD ADVANCED THEOREMS ---
+    {
+        "id": "geo_points_on_circle_is_circumcircle_var",
+        "name": "Circle Points form Circumcircle",
+        "inputs": ["Circle(?O)", "PointOnCircle(?A,Circle(?O))", "PointOnCircle(?B,Circle(?O))", "PointOnCircle(?C,Circle(?O))"],
+        "outputs": ["Circumcircle(?O,?A,?B,?C)"],
+        "description": "If points A, B, C lie on Circle(O), O is the circumcircle of triangle ABC."
+    },
+    {
+        "id": "geo_collinear_center_is_diameter_var",
+        "name": "Collinear Points with Center form Diameter",
+        "inputs": ["Circle(?O)", "PointOnCircle(?A,Circle(?O))", "PointOnCircle(?D,Circle(?O))", "Collinear(?A,?D,?O)"],
+        "outputs": ["Diameter(?A?D,Circle(?O))"],
+        "description": "If A and D lie on Circle(O) and are collinear with center O, AD is a diameter."
+    },
+    {
+        "id": "geo_inscribed_angle_theorem_var",
+        "name": "Inscribed Angle Theorem (Cyclic Points)",
+        "inputs": ["Circle(?O)", "PointOnCircle(?X,Circle(?O))", "PointOnCircle(?Y,Circle(?O))", "PointOnCircle(?Z,Circle(?O))", "PointOnCircle(?W,Circle(?O))"],
+        "outputs": ["Equal(Angle(?Y,?X,?Z),Angle(?Y,?W,?Z))"],
+        "description": "Angles subtended by the same segment in cyclic points are equal."
+    },
+    {
+        "id": "geo_isogonal_altitude_circumcenter_var",
+        "name": "Altitude and Circumcenter Isogonal Relation",
+        "inputs": ["Triangle(?A,?B,?C)", "Foot(?H,?A,Segment(?B,?C))", "Circumcircle(?O,?A,?B,?C)"],
+        "outputs": ["Equal(Angle(?B,?A,?H),Angle(?C,?A,?O))", "Equal(Angle(?B,?A,?H),Angle(?O,?A,?C))"],
+        "description": "The altitude from A and the circumradius AO form equal angles with adjacent sides AB and AC."
+    },
+    {
+        "id": "geo_thales_diameter_angle_var",
+        "name": "Thales' Theorem on Diameter",
+        "inputs": ["Circle(?O)", "Diameter(?A?D,Circle(?O))", "PointOnCircle(?C,Circle(?O))"],
+        "outputs": ["RightAngle(Angle(?A,?C,?D))"],
+        "description": "An angle inscribed in a semicircle is a right angle (90 degrees)."
+    },
+    {
+        "id": "geo_perp_angle_transfer_var",
+        "name": "Perpendicular Line Angle Transfer",
+        "inputs": ["Perpendicular(Segment(?A,?B),Segment(?D,?E))", "Perpendicular(Segment(?A,?C),Segment(?D,?F))"],
+        "outputs": ["Equal(Angle(?B,?A,?C),Angle(?E,?D,?F))"],
+        "description": "If two pairs of lines are mutually perpendicular, the angles between them are equal."
+    },
+    {
+        "id": "geo_cyclic_quad_opposite_angles_var",
+        "name": "Cyclic Quadrilateral Opposite Angle Sum",
+        "inputs": ["CyclicQuadrilateral(?A,?B,?C,?D)"],
+        "outputs": [
+            "Equal(Add(Angle(?D,?A,?B),Angle(?B,?C,?D)),180)",
+            "Equal(Angle(?D,?A,?B)+Angle(?B,?C,?D),180)",
+            "Equal(Angle(?A,?B,?C)+Angle(?C,?D,?A),180)"
+        ],
+        "description": "Opposite angles of a cyclic quadrilateral sum to 180 degrees."
+    },
+    {
+        "id": "geo_similar_triangles_angle_equality_var",
+        "name": "Similar Triangles Angle Equality",
+        "inputs": ["SimilarTriangles(Triangle(?A,?B,?C),Triangle(?D,?E,?F))"],
+        "outputs": ["Equal(Angle(?A,?B,?C),Angle(?D,?E,?F))", "Equal(Angle(?B,?C,?A),Angle(?E,?F,?D))", "Equal(Angle(?C,?A,?B),Angle(?F,?D,?E))"],
+        "description": "Corresponding angles of similar triangles are equal."
+    },
+    {
+        "id": "geo_similar_triangles_ratio_var",
+        "name": "Similar Triangles Side Ratios",
+        "inputs": ["SimilarTriangles(Triangle(?A,?B,?C),Triangle(?D,?E,?F))"],
+        "outputs": ["Equal(Div(Length(Segment(?A,?B)),Length(Segment(?D,?E))),Div(Length(Segment(?B,?C)),Length(Segment(?E,?F))))"],
+        "description": "Corresponding sides of similar triangles are proportional."
     }
 ]
 

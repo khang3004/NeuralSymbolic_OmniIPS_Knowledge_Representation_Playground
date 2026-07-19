@@ -104,12 +104,13 @@ def unify_expressions(pattern: str, fact: str) -> Optional[Dict[str, str]]:
     if not has_variables(pattern):
         return {} if pattern == fact else None
 
-    # Check for composite variables (e.g. "?A?B" matching "AB")
+    # Check for composite variables (e.g. "?A?B" matching "AB" or "A1B1")
     vars_found = re.findall(r"\?[A-Za-z0-9_]+", pattern)
     if len(vars_found) > 1 and "".join(vars_found) == pattern:
-        if len(vars_found) == len(fact):
+        fact_points = re.findall(r"[A-Z][0-9]*", fact)
+        if len(vars_found) == len(fact_points):
             binding = {}
-            for var, val in zip(vars_found, fact):
+            for var, val in zip(vars_found, fact_points):
                 binding[var] = val
             return binding
         return None
@@ -122,6 +123,14 @@ def unify_expressions(pattern: str, fact: str) -> Optional[Dict[str, str]]:
         # Both atoms
         if is_variable(pattern):
             return {pattern: fact}
+        # Handle partially bound composite atoms (e.g. "A?C" matching "AC", "A1?F" matching "A1C1")
+        if "?" in pattern:
+            prefix = pattern.split("?")[0]
+            if prefix and fact.startswith(prefix):
+                pattern = pattern[len(prefix):]
+                fact = fact[len(prefix):]
+                if is_variable(pattern):
+                    return {pattern: fact}
         return {} if pattern == fact else None
 
     if pat_parsed is None or fct_parsed is None:
@@ -243,9 +252,12 @@ def find_rule_bindings(
 
         if not new_valid:
             return []
-        # Deduplicate
+        # Deduplicate and filter out bindings where distinct point variables map to the same point
         seen_bindings: List[Dict] = []
         for b in new_valid:
+            point_vars = {k: v for k, v in b.items() if re.match(r"^\?[A-Z][0-9]*$", k)}
+            if len(point_vars.values()) != len(set(point_vars.values())):
+                continue  # Discard binding with non-distinct points
             if b not in seen_bindings:
                 seen_bindings.append(b)
         valid_bindings = seen_bindings
