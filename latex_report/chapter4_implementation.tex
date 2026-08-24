@@ -10,17 +10,40 @@ Toàn bộ hệ thống được thiết kế theo kiến trúc Microservices hi
 
 \begin{figure}[h!]
 \centering
-\begin{tikzpicture}[node distance=2.5cm, auto]
-    \node [base, fill=teal!15, text width=3.8cm] (frontend) {\textbf{Frontend UI}\\\faDesktop\ Streamlit (Port 8501)\\Giao diện giải toán \& Stream};
-    \node [base, fill=blue!15, right of=frontend, xshift=3.5cm, text width=4.5cm] (backend) {\textbf{Backend API Gateway}\\\faServer\ FastAPI (Port 8080)\\Engine Suy diễn + SymPy AR};
-    \node [database, below of=backend, yshift=-1.0cm, xshift=-2.5cm] (neo4j) {\textbf{Neo4j Graph DB}\\\faProjectDiagram\ Bolt: 7687, HTTP: 7474\\1.128 Nodes, 1.532 Rel};
-    \node [database, below of=backend, yshift=-1.0cm, xshift=2.5cm] (qdrant) {\textbf{Qdrant Vector DB}\\\faCloud\ Port 6333 / Cloud\\Chỉ mục Rules \& Facts};
+\begin{tikzpicture}[scale=0.95, transform shape]
+    % Tier 1: Frontend
+    \node [base, fill=teal!15, draw=teal!80!black, text width=5.2cm] (frontend) at (0, 3.2) {
+        \textbf{Frontend Presentation Layer}\\[2pt]
+        {\scriptsize \faDesktop\ Streamlit UI (Port 8501)}\\[1pt]
+        {\scriptsize Giao diện giải toán, nhập đề bài \& Stream sư phạm}
+    };
 
-    \draw [arrow, <->] (frontend) -- node[above] {HTTP / REST \& SSE} (backend);
-    \draw [arrow, <->] (backend) -- node[left, near end] {Cypher Bolt} (neo4j);
-    \draw [arrow, <->] (backend) -- node[right, near end] {gRPC / REST} (qdrant);
+    % Tier 2: Backend
+    \node [process, fill=blue!15, draw=blue!85!black, text width=5.6cm] (backend) at (0, 1.0) {
+        \textbf{Backend Inference Core \& Gateway}\\[2pt]
+        {\scriptsize \faServer\ FastAPI Service (Port 8080)}\\[1pt]
+        {\scriptsize Forward Chaining + SymPy AR + GraphRAG Router}
+    };
+
+    % Tier 3: Databases
+    \node [database, fill=orange!12, draw=orange!85!black, text width=3.4cm] (neo4j) at (-3.4, -1.6) {
+        \textbf{Neo4j Graph DB}\\[2pt]
+        {\scriptsize \faProjectDiagram\ Bolt: 7687, HTTP: 7474}\\[1pt]
+        {\scriptsize 1.128 Nodes, 1.532 Rel}
+    };
+
+    \node [database, fill=orange!12, draw=orange!85!black, text width=3.4cm] (qdrant) at (3.4, -1.6) {
+        \textbf{Qdrant Vector DB}\\[2pt]
+        {\scriptsize \faCloud\ Port 6333 / Cloud}\\[1pt]
+        {\scriptsize Lập chỉ mục Rules \& Facts}
+    };
+
+    % Connecting Arrows
+    \draw [arrow, <->] (frontend) -- node[right=4pt, font=\footnotesize\bfseries, text=blue!85!black] {HTTP / REST \& SSE} (backend);
+    \draw [arrow, <->] (backend.215) -- node[above left=2pt, font=\footnotesize\bfseries, text=teal!85!black] {Cypher Bolt} (neo4j.north);
+    \draw [arrow, <->] (backend.325) -- node[above right=2pt, font=\footnotesize\bfseries, text=orange!95!black] {gRPC / REST} (qdrant.north);
 \end{tikzpicture}
-\caption{Sơ đồ kiến trúc Microservices Docker của hệ thống AlphaGeometry-IMO.}
+\caption{Sơ đồ kiến trúc Microservices Docker phân tầng của hệ thống AlphaGeometry-IMO.}
 \label{fig:system_architecture}
 \end{figure}
 

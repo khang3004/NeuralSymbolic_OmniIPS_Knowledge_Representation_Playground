@@ -44,18 +44,20 @@ Vào tháng 1 năm 2024, nhóm nghiên cứu Google DeepMind (Trịnh Triều v�
 
 \begin{figure}[h!]
 \centering
-\begin{tikzpicture}[node distance=1.8cm, auto]
-    \node [base, fill=blue!15, text width=3.8cm] (input) {\textbf{Đề bài Hình học}\\(Ngôn ngữ tự nhiên / Vị từ)};
-    \node [process, fill=green!15, right of=input, xshift=3.5cm, text width=4.5cm] (dd) {\textbf{Symbolic Engine (DD+AR)}\\Suy diễn tiến + Đại số hóa};
-    \node [decision, below of=dd, yshift=-0.8cm] (check) {Mục tiêu đạt được?};
-    \node [base, fill=teal!20, right of=check, xshift=3.5cm, text width=3.5cm] (success) {\textbf{Chứng minh Thành công!}\\\faCheckCircle\ Xuất lời giải logic};
-    \node [agent, fill=purple!20, left of=check, xshift=-3.5cm, text width=4.2cm] (neural) {\textbf{Neural Model (LLM)}\\Đề xuất hình phụ (Auxiliary)};
+\begin{tikzpicture}[scale=0.95, transform shape]
+    % Nodes
+    \node [base, fill=blue!12, draw=blue!80!black, text width=3.2cm] (input) at (-4.4, 0) {\textbf{Đề bài Hình học}\\[2pt]{\scriptsize (Ngôn ngữ tự nhiên / Vị từ)}};
+    \node [process, fill=green!15, draw=green!65!black, text width=3.8cm] (dd) at (0.2, 0) {\textbf{Symbolic Engine (DD+AR)}\\[2pt]{\scriptsize Suy diễn tiến + Đại số hóa}};
+    \node [decision, fill=yellow!18, draw=orange!80!black, text width=2.4cm] (check) at (0.2, -2.2) {\textbf{Mục tiêu}\\\textbf{đạt được?}};
+    \node [base, fill=teal!18, draw=teal!80!black, text width=3.2cm] (success) at (4.6, -2.2) {\textbf{Chứng minh Thành công!}\\[2pt]{\scriptsize \faCheckCircle\ Xuất lời giải logic}};
+    \node [agent, fill=purple!15, draw=purple!80!black, text width=3.4cm] (neural) at (-4.4, -2.2) {\textbf{Neural Model (LLM)}\\[2pt]{\scriptsize Đề xuất hình phụ (Auxiliary)}};
 
+    % Connecting Arrows with perfectly placed labels
     \draw [arrow] (input) -- (dd);
     \draw [arrow] (dd) -- (check);
-    \draw [arrow] (check) -- node[above] {Có} (success);
-    \draw [arrow] (check) -- node[left] {Không (Bế tắc)} (neural);
-    \draw [arrow] (neural) |- node[near start, left] {Thêm điểm/đường phụ} (dd);
+    \draw [arrow] (check) -- node[above=3pt, font=\footnotesize\bfseries, text=teal!80!black] {Có} (success);
+    \draw [arrow] (check) -- node[above=3pt, font=\footnotesize\bfseries, text=red!80!black] {Không (Bế tắc)} (neural);
+    \draw [arrow] (neural) -- node[left=3pt, font=\footnotesize\itshape, text=purple!90!black, align=center] {Thêm\\hình phụ} (input);
 \end{tikzpicture}
 \caption{Sơ đồ vòng lặp cộng sinh Neuro-Symbolic của AlphaGeometry (Google DeepMind).}
 \label{fig:alphageometry_loop}

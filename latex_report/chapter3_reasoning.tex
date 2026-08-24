@@ -83,20 +83,26 @@ Trong các bài toán hình học nâng cao (đặc biệt là đề thi học s
 
 \begin{figure}[h!]
 \centering
-\begin{tikzpicture}[node distance=2.2cm, auto]
-    \node [base, fill=blue!10, text width=3.5cm] (start) {\textbf{Tập sự kiện ban đầu $\mathcal{F}_0$}};
-    \node [process, fill=green!15, right of=start, xshift=3.5cm, text width=4.5cm] (forward) {\textbf{Forward Deduction}\\(Tiên đề Euclid + FormalGeo)};
-    \node [process, fill=yellow!20, below of=forward, yshift=-0.5cm, text width=4.5cm] (sympy) {\textbf{SymPy AR Engine}\\(Đại số hóa góc \& đoạn thẳng)};
-    \node [decision, below of=sympy, yshift=-0.8cm] (goal_check) {Đạt Goal?};
-    \node [base, fill=teal!20, right of=goal_check, xshift=3.5cm, text width=3.5cm] (done) {\textbf{Hoàn thành!} \\\faCheck\ Lời giải hợp lệ};
-    \node [agent, fill=purple!20, left of=goal_check, xshift=-3.5cm, text width=4.5cm] (aux) {\textbf{Auxiliary Agent (LLM)}\\Phân tích Proof Gap \& Đề xuất điểm/đường phụ};
+\begin{tikzpicture}[scale=0.92, transform shape]
+    % Left column
+    \node [base, fill=blue!12, draw=blue!80!black, text width=3.2cm] (start) at (-3.8, 0) {\textbf{Tập sự kiện ban đầu $\mathcal{F}_0$}\\[2pt]{\scriptsize (Working Memory)}};
+    \node [agent, fill=purple!15, draw=purple!80!black, text width=3.4cm] (aux) at (-3.8, -3.2) {\textbf{Auxiliary Agent (LLM)}\\[2pt]{\scriptsize Phân tích Gap \& Dựng hình phụ}};
 
+    % Center column
+    \node [process, fill=green!15, draw=green!65!black, text width=4.0cm] (forward) at (0.8, 0) {\textbf{Forward Deduction Engine}\\[2pt]{\scriptsize (Luật vị từ + FormalGeo)}};
+    \node [process, fill=yellow!18, draw=orange!75!black, text width=4.0cm] (sympy) at (0.8, -1.6) {\textbf{SymPy AR Engine}\\[2pt]{\scriptsize (Đại số hóa góc \& đoạn thẳng)}};
+    \node [decision, fill=yellow!18, draw=orange!80!black, text width=2.2cm] (goal_check) at (0.8, -3.2) {\textbf{Đạt}\\\textbf{Goal?}};
+
+    % Right column
+    \node [base, fill=teal!18, draw=teal!80!black, text width=3.0cm] (done) at (4.8, -3.2) {\textbf{Hoàn thành! \faCheckCircle}\\[2pt]{\scriptsize Xuất lời giải logic}};
+
+    % Arrows with clear labels
     \draw [arrow] (start) -- (forward);
     \draw [arrow] (forward) -- (sympy);
     \draw [arrow] (sympy) -- (goal_check);
-    \draw [arrow] (goal_check) -- node[above] {Có} (done);
-    \draw [arrow] (goal_check) -- node[left] {Bế tắc} (aux);
-    \draw [arrow] (aux) |- node[near start, left] {Nạp đối tượng phụ mới vào $\mathcal{WM}$} (forward);
+    \draw [arrow] (goal_check) -- node[above=3pt, font=\footnotesize\bfseries, text=teal!80!black] {Có} (done);
+    \draw [arrow] (goal_check) -- node[above=3pt, font=\footnotesize\bfseries, text=red!80!black] {Bế tắc} (aux);
+    \draw [arrow] (aux) -- node[left=3pt, font=\footnotesize\itshape, text=purple!90!black, align=center] {Nạp hình phụ\\vào $\mathcal{WM}$} (start);
 \end{tikzpicture}
 \caption{Quy trình phối hợp toàn diện giữa Suy diễn tiến, SymPy AR và Tác tử Sinh hình phụ.}
 \label{fig:full_reasoning_flow}
