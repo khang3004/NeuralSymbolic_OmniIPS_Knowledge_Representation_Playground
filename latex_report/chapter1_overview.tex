@@ -6,37 +6,37 @@
 \label{chap:overview}
 
 \section{Tổng quan về Biểu diễn Tri thức trong Trí tuệ Nhân tạo}
-Biểu diễn tri thức (Knowledge Representation - KR) là phân ngành cốt lõi của Trí tuệ Nhân tạo, nghiên cứu cách thức chuyển tải sự hiểu biết của con người về thế giới thực vào các cấu trúc dữ liệu hình thức mà máy tính có thể lưu trữ, truy vấn và thực hiện suy diễn suy lý \cite{russell2020artificial, do2015bieudientrithuc}. Một mô hình biểu diễn tri thức hiệu quả cần đảm bảo hai yếu tố:
-\begin{itemize}
-    \item \textbf{Tính biểu đạt (Expressive Power)}: Đủ phong phú để mô tả chính xác các đối tượng, tính chất, quan hệ không gian và quy luật phức tạp trong miền ứng dụng.
-    \item \textbf{Tính toán được và hiệu quả (Computational Tractability)}: Thuật toán suy diễn trên cơ sở tri thức phải hội tụ trong thời gian chấp nhận được, hạn chế bùng nổ tổ hợp (Combinatorial Explosion).
-\end{itemize}
-
-Trong lịch sử phát triển của AI, các phương pháp biểu diễn tri thức kinh điển bao gồm:
+Biểu diễn tri thức (Knowledge Representation -- KR) là phân ngành cốt lõi của Trí tuệ Nhân tạo, nghiên cứu cách thức chuyển tải sự hiểu biết của con người về thế giới thực vào các cấu trúc dữ liệu hình thức mà máy tính có thể lưu trữ, truy vấn và thực hiện suy diễn suy lý \cite{russell2020artificial, do2015bieudientrithuc}. Một mô hình biểu diễn tri thức hiệu quả cần đảm bảo hai yếu tố:
 \begin{enumerate}
-    \item \textbf{Logic Mệnh đề và Logic Vị từ Bậc nhất (First-Order Logic - FOL)}: Biểu diễn sự kiện thông qua các quan hệ vị từ hình thức $P(x_1, \dots, x_n)$ và các luật suy diễn dạng Horn Clause $\bigwedge A_i \implies B$. Logic vị từ có nền tảng ngữ nghĩa toán học chặt chẽ và tính đúng đắn (Soundness) tuyệt đối.
-    \item \textbf{Mạng Ngữ nghĩa (Semantic Networks) và Khung Tri thức (Frames)}: Do Quillian và Minsky đề xuất, biểu diễn thực thể dưới dạng các nút và quan hệ ngữ nghĩa dưới dạng các cung có hướng (chẳng hạn quan hệ thừa kế \texttt{IS\_A}, quan hệ thành phần \texttt{PART\_OF}).
-    \item \textbf{Hệ Chuyên gia dựa trên Luật (Rule-Based Expert Systems)}: Tách biệt rõ ràng giữa Cơ sở Tri thức (Knowledge Base) chứa tập luật nếu-thì và Động cơ Suy diễn (Inference Engine) sử dụng thuật toán Rete hoặc suy diễn tiến/lùi (Forward/Backward Chaining).
-    \item \textbf{Đồ thị Tri thức (Knowledge Graph - KG) và Ontology (OWL/RDF)}: Sự kế thừa và phát triển hiện đại của Mạng ngữ nghĩa, tổ chức tri thức dưới dạng đồ thị có thuộc tính (Property Graph) trên các cơ sở dữ liệu chuyên dụng như Neo4j, hỗ trợ truy vấn cấu trúc mạnh mẽ qua ngôn ngữ Cypher \cite{auer2007dbpedia}.
+    \item \textbf{Tính đầy đủ về mặt biểu cảm (Expressive Adequacy)}: Khả năng mô tả chính xác và đầy đủ các thực thể, thuộc tính và mối quan hệ phức tạp trong miền bài toán.
+    \item \textbf{Hiệu quả tính toán (Computational Efficiency)}: Cho phép các thuật toán suy diễn tự động thực thi trong thời gian chấp nhận được mà không rơi vào bùng nổ tổ hợp (Combinatorial Explosion).
 \end{enumerate}
 
+Trong lịch sử phát triển của AI, các mô hình biểu diễn tri thức kinh điển bao gồm:
+\begin{itemize}
+    \item \textbf{Logic vị từ bậc nhất (First-Order Logic -- FOL)}: Cung cấp cú pháp và ngữ nghĩa toán học chặt chẽ với các lượng từ ($\forall, \exists$), các hàm và vị từ quan hệ.
+    \item \textbf{Mạng ngữ nghĩa (Semantic Networks)}: Do Quillian đề xuất năm 1968, biểu diễn tri thức dưới dạng đồ thị có hướng gồm các đỉnh (khái niệm) và các cạnh (quan hệ ngữ nghĩa như \texttt{IS\_A}, \texttt{PART\_OF}).
+    \item \textbf{Khung tri thức (Frames)}: Do Marvin Minsky khởi xướng năm 1974, cấu trúc hóa đối tượng thành các thuộc tính (slots) và giá trị (facets), hỗ trợ cơ chế kế thừa và giá trị mặc định.
+    \item \textbf{Hệ chuyên gia dựa trên luật (Rule-Based Expert Systems)}: Tổ chức tri thức thành các luật sản xuất dạng $\text{IF } \langle \text{Tiền đề} \rangle \text{ THEN } \langle \text{Kết luận} \rangle$, vận hành qua các động cơ suy diễn tiến (Forward Chaining) hoặc suy diễn lùi (Backward Chaining).
+    \item \textbf{Đồ thị Tri thức (Knowledge Graph -- KG) và Ontology (OWL/RDF)}: Sự kế thừa và phát triển hiện đại của Mạng ngữ nghĩa, tổ chức tri thức dưới dạng đồ thị có thuộc tính (Property Graph) trên các cơ sở dữ liệu chuyên dụng như Neo4j, hỗ trợ truy vấn cấu trúc mạnh mẽ qua ngôn ngữ Cypher \cite{auer2007dbpedia}.
+\end{itemize}
+
 \section{Lịch sử và Các Phương pháp Chứng minh Hình học Tự động}
-Chứng minh định lý tự động trong hình học phẳng (Automated Theorem Proving in Geometry) đã trải qua hơn nửa thế kỷ nghiên cứu với các trường phái chính:
+Chứng minh định lý hình học tự động (Automated Geometric Theorem Proving) là một trong những thách thức lâu đời nhất của AI kể từ thập niên 1950 (khởi đầu với chương trình \textit{Geometry Theorem Prover} của Herbert Gelernter năm 1959). Các hướng tiếp cận chính trải qua ba giai đoạn lịch sử:
 
 \subsection{Phương pháp Đại số Tọa độ (Algebraic Coordinate Methods)}
 \begin{itemize}
     \item \textbf{Phương pháp Wu (Wu's Method)}: Do nhà toán học Trung Quốc Wu Wen-tsun phát triển vào năm 1977 dựa trên lý thuyết Ritt-Wu Characteristic Set \cite{wu1984basic}. Phương pháp này chuyển toàn bộ giả thiết và kết luận hình học thành hệ phương trình đa thức trên tọa độ Cartesian, sau đó sử dụng phép chia đa thức để kiểm tra xem đa thức kết luận có thuộc ideal sinh bởi các đa thức giả thiết hay không.
-    \item \textbf{Phương pháp Cơ sở Gröbner (Gröbner Basis Method)}: Sử dụng thuật toán Buchberger để kiểm tra tính thuộc về của đa thức kết luận trong đại số giao hoán.
+    \item \textbf{Cơ sở Gröbner (Gröbner Bases)}: Do Bruno Buchberger phát triển năm 1965, giải quyết triệt để bài toán thành viên ideal (Ideal Membership Problem) cho đa thức nhiều biến.
 \end{itemize}
-\textit{Hạn chế}: Các phương pháp đại số tọa độ có thể giải quyết được các bài toán rất khó nhưng hoàn toàn đánh mất ý nghĩa hình học trực quan, sinh ra các biểu thức đại số khổng lồ và không tạo ra được lời giải sư phạm từng bước theo tư duy con người.
+\textit{Hạn chế}: Phương pháp đại số rất mạnh mẽ nhưng có độ phức tạp lũy thừa kép (Double Exponential Complexity) và xuất ra các biểu thức đại số phức tạp, hoàn toàn thiếu tính trực quan sư phạm đối với người học.
 
 \subsection{Phương pháp Ký hiệu và Diện tích (Synthetic \& Area Methods)}
 \begin{itemize}
     \item \textbf{Phương pháp Diện tích (Chou's Area Method)}: Do Chou, Gao và Zhang phát triển năm 1994 \cite{chou1994machine}. Phương pháp sử dụng các bất biến hình học như diện tích có hướng của tam giác ($S_{ABC}$) và tỉ số đoạn thẳng có hướng để khử dần các điểm phụ, đưa kết luận về hằng số 0 hoặc 1.
-    \item \textbf{Ưu điểm}: Tạo ra các bước chứng minh hình thức dễ đọc hơn nhiều so với phương pháp tọa độ Wu.
 \end{itemize}
 
-\subsection{Phương pháp Cơ sở Dữ liệu Suy diễn (Deductive Database - DD)}
+\subsection{Phương pháp Cơ sở Dữ liệu Suy diễn (Deductive Database -- DD)}
 Mô hình Deductive Database lưu trữ tập các sự kiện hình học ban đầu và lặp đi lặp lại việc so khớp các tiên đề/định lý trong cơ sở tri thức để tạo ra các sự kiện mới (Forward Chaining) cho đến khi đạt được mục tiêu chứng minh. Đây là nền tảng cốt lõi được áp dụng trong hệ thống FormalGeo và AlphaGeometry.
 
 \section{Kiến trúc Đột phá AlphaGeometry của Google DeepMind}
@@ -44,20 +44,38 @@ Vào tháng 1 năm 2024, nhóm nghiên cứu Google DeepMind (Trịnh Triều v�
 
 \begin{figure}[h!]
 \centering
-\begin{tikzpicture}[scale=0.95, transform shape]
-    % Nodes
-    \node [base, fill=blue!12, draw=blue!80!black, text width=3.2cm] (input) at (-4.4, 0) {\textbf{Đề bài Hình học}\\[2pt]{\scriptsize (Ngôn ngữ tự nhiên / Vị từ)}};
-    \node [process, fill=green!15, draw=green!65!black, text width=3.8cm] (dd) at (0.2, 0) {\textbf{Symbolic Engine (DD+AR)}\\[2pt]{\scriptsize Suy diễn tiến + Đại số hóa}};
-    \node [decision, fill=yellow!18, draw=orange!80!black, text width=2.4cm] (check) at (0.2, -2.2) {\textbf{Mục tiêu}\\\textbf{đạt được?}};
-    \node [base, fill=teal!18, draw=teal!80!black, text width=3.2cm] (success) at (4.6, -2.2) {\textbf{Chứng minh Thành công!}\\[2pt]{\scriptsize \faCheckCircle\ Xuất lời giải logic}};
-    \node [agent, fill=purple!15, draw=purple!80!black, text width=3.4cm] (neural) at (-4.4, -2.2) {\textbf{Neural Model (LLM)}\\[2pt]{\scriptsize Đề xuất hình phụ (Auxiliary)}};
+\begin{tikzpicture}[scale=0.88, transform shape]
+    % Nodes with generous sizing and inner padding
+    \node [base, fill=blue!12, draw=blue!85!black, minimum width=3.8cm, minimum height=1.3cm, inner sep=6pt] (input) at (-4.5, 2.0) {
+        \textbf{Đề bài Hình học}\\[3pt]
+        {\scriptsize (Ngôn ngữ tự nhiên / Vị từ)}
+    };
+    
+    \node [process, fill=green!15, draw=green!65!black, minimum width=4.5cm, minimum height=1.3cm, inner sep=6pt] (dd) at (1.0, 2.0) {
+        \textbf{Symbolic Engine (DD + AR)}\\[3pt]
+        {\scriptsize Suy diễn tiến + Đại số hóa}
+    };
+    
+    \node [decision, fill=yellow!18, draw=orange!85!black, minimum width=3.2cm, minimum height=1.4cm] (check) at (1.0, -1.6) {
+        \textbf{Mục tiêu}\\[2pt]\textbf{đạt được?}
+    };
+    
+    \node [base, fill=teal!18, draw=teal!85!black, minimum width=3.8cm, minimum height=1.3cm, inner sep=6pt] (success) at (6.2, -1.6) {
+        \textbf{Chứng minh Thành công!}\\[3pt]
+        {\scriptsize \faCheckCircle\ Xuất lời giải logic}
+    };
+    
+    \node [agent, fill=purple!15, draw=purple!85!black, minimum width=3.8cm, minimum height=1.3cm, inner sep=6pt] (neural) at (-4.5, -1.6) {
+        \textbf{Neural Model (LLM)}\\[3pt]
+        {\scriptsize Đề xuất hình phụ (Auxiliary)}
+    };
 
-    % Connecting Arrows with perfectly placed labels
+    % Clean Connecting Arrows
     \draw [arrow] (input) -- (dd);
     \draw [arrow] (dd) -- (check);
-    \draw [arrow] (check) -- node[above=3pt, font=\footnotesize\bfseries, text=teal!80!black] {Có} (success);
-    \draw [arrow] (check) -- node[above=3pt, font=\footnotesize\bfseries, text=red!80!black] {Không (Bế tắc)} (neural);
-    \draw [arrow] (neural) -- node[left=3pt, font=\footnotesize\itshape, text=purple!90!black, align=center] {Thêm\\hình phụ} (input);
+    \draw [arrow] (check.east) -- node[above=3pt, font=\bfseries\small, text=teal!85!black] {Có} (success.west);
+    \draw [arrow] (check.west) -- node[above=3pt, font=\bfseries\small, text=red!85!black] {Không (Bế tắc)} (neural.east);
+    \draw [arrow] (neural.north) -- node[left=4pt, font=\itshape\footnotesize, text=purple!90!black, align=right] {Thêm\\hình phụ} (input.south);
 \end{tikzpicture}
 \caption{Sơ đồ vòng lặp cộng sinh Neuro-Symbolic của AlphaGeometry (Google DeepMind).}
 \label{fig:alphageometry_loop}
@@ -77,4 +95,4 @@ Kiến trúc AlphaGeometry dựa trên sự phối hợp nhịp nhàng giữa ha
 \section{Tập Tiên đề Hình học Phẳng FormalGeo và Chuẩn hóa Vị từ}
 Dự án \textbf{FormalGeo} \cite{zhang2023formalgeo} là một nỗ lực cộng đồng quy mô lớn nhằm hình thức hóa toàn bộ chương trình hình học phẳng phổ thông thành tập hợp gần 300 định lý và tiên đề vị từ có thể thực thi tự động trên máy tính. 
 
-Trong tiểu luận này, chúng tôi kế thừa triết lý của FormalGeo và AlphaGeometry, xây dựng một cơ sở tri thức hình học toàn diện, chuẩn hóa các vị từ toán học, đưa toàn bộ vào Đồ thị Tri thức Neo4j và chỉ mục Vector Qdrant, đồng thời kết hợp động cơ đại số máy tính SymPy để hiện thực hóa cỗ máy suy diễn hình học phẳng hoàn chỉnh.
+Trong tiểu luận này, chúng tôi kế thừa hệ thống tiên đề FormalGeo, cấu trúc hóa lại thành đồ thị Ontology trên Neo4j và bổ sung cơ chế giải tích SymPy AR độc lập nhằm phục vụ chứng minh tự động các bài toán Olympic.

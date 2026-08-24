@@ -10,38 +10,38 @@ Toàn bộ hệ thống được thiết kế theo kiến trúc Microservices hi
 
 \begin{figure}[h!]
 \centering
-\begin{tikzpicture}[scale=0.95, transform shape]
+\begin{tikzpicture}[scale=0.90, transform shape]
     % Tier 1: Frontend
-    \node [base, fill=teal!15, draw=teal!80!black, text width=5.2cm] (frontend) at (0, 3.2) {
-        \textbf{Frontend Presentation Layer}\\[2pt]
+    \node [base, fill=teal!15, draw=teal!80!black, minimum width=6.0cm, minimum height=1.4cm, inner sep=6pt] (frontend) at (0, 3.8) {
+        \textbf{Frontend Presentation Layer}\\[3pt]
         {\scriptsize \faDesktop\ Streamlit UI (Port 8501)}\\[1pt]
         {\scriptsize Giao diện giải toán, nhập đề bài \& Stream sư phạm}
     };
 
     % Tier 2: Backend
-    \node [process, fill=blue!15, draw=blue!85!black, text width=5.6cm] (backend) at (0, 1.0) {
-        \textbf{Backend Inference Core \& Gateway}\\[2pt]
+    \node [process, fill=blue!15, draw=blue!85!black, minimum width=6.2cm, minimum height=1.5cm, inner sep=6pt] (backend) at (0, 1.0) {
+        \textbf{Backend Inference Core \& Gateway}\\[3pt]
         {\scriptsize \faServer\ FastAPI Service (Port 8080)}\\[1pt]
         {\scriptsize Forward Chaining + SymPy AR + GraphRAG Router}
     };
 
     % Tier 3: Databases
-    \node [database, fill=orange!12, draw=orange!85!black, text width=3.4cm] (neo4j) at (-3.4, -1.6) {
+    \node [database, fill=orange!12, draw=orange!85!black, minimum width=3.6cm, minimum height=1.4cm, inner sep=5pt] (neo4j) at (-3.8, -2.2) {
         \textbf{Neo4j Graph DB}\\[2pt]
         {\scriptsize \faProjectDiagram\ Bolt: 7687, HTTP: 7474}\\[1pt]
         {\scriptsize 1.128 Nodes, 1.532 Rel}
     };
 
-    \node [database, fill=orange!12, draw=orange!85!black, text width=3.4cm] (qdrant) at (3.4, -1.6) {
+    \node [database, fill=orange!12, draw=orange!85!black, minimum width=3.6cm, minimum height=1.4cm, inner sep=5pt] (qdrant) at (3.8, -2.2) {
         \textbf{Qdrant Vector DB}\\[2pt]
         {\scriptsize \faCloud\ Port 6333 / Cloud}\\[1pt]
         {\scriptsize Lập chỉ mục Rules \& Facts}
     };
 
-    % Connecting Arrows
-    \draw [arrow, <->] (frontend) -- node[right=4pt, font=\footnotesize\bfseries, text=blue!85!black] {HTTP / REST \& SSE} (backend);
-    \draw [arrow, <->] (backend.215) -- node[above left=2pt, font=\footnotesize\bfseries, text=teal!85!black] {Cypher Bolt} (neo4j.north);
-    \draw [arrow, <->] (backend.325) -- node[above right=2pt, font=\footnotesize\bfseries, text=orange!95!black] {gRPC / REST} (qdrant.north);
+    % Connecting Arrows with generous gaps
+    \draw [arrow, <->] (frontend.south) -- node[right=6pt, font=\bfseries\footnotesize, text=blue!85!black] {HTTP / REST \& SSE} (backend.north);
+    \draw [arrow, <->] (backend.south west) -- node[above left=3pt, font=\bfseries\footnotesize, text=teal!85!black] {Cypher Bolt} (neo4j.north);
+    \draw [arrow, <->] (backend.south east) -- node[above right=3pt, font=\bfseries\footnotesize, text=orange!95!black] {gRPC / REST} (qdrant.north);
 \end{tikzpicture}
 \caption{Sơ đồ kiến trúc Microservices Docker phân tầng của hệ thống AlphaGeometry-IMO.}
 \label{fig:system_architecture}

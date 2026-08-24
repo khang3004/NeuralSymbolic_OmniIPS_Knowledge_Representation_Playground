@@ -15,63 +15,60 @@ Mỗi luật suy diễn hình học $r \in \mathcal{R}$ được định nghĩa 
 \end{equation}
 trong đó $\text{Inputs}(r) = \{p_1(?x_1, \dots), \dots, p_k(?x_k, \dots)\}$ là tập các mẫu vị từ chứa biến (bắt đầu bằng dấu \texttt{?}), và $\text{Outputs}(r) = \{q_1(?x_1, \dots), \dots, q_m(?x_m, \dots)\}$ là các sự kiện suy ra sau khi thế biến.
 
+\subsection{Chuẩn hóa Đồng nhất và Quan hệ Tương đương (Canonical Equivalence)}
+Trong hình học, một đối tượng có thể được biểu diễn qua nhiều hoán vị đỉnh có tính chất tương đương (ví dụ: đoạn thẳng $AB \equiv BA$, góc $\angle ABC \equiv \angle CBA$, tam giác $\triangle ABC \equiv \triangle BCA$). Nếu không chuẩn hóa, bộ nhớ làm việc sẽ bị bùng nổ tổ hợp do lưu trữ trùng lặp.
+
+Hệ thống định nghĩa hàm chuẩn hóa chính quy $\text{Canonical}(P)$ cho mọi vị từ:
+\begin{itemize}
+    \item Với đoạn thẳng: $\text{Canonical}(\text{Segment}(A, B)) = \text{Segment}(\min(A, B), \max(A, B))$.
+    \item Với góc: $\text{Canonical}(\text{Angle}(A, B, C)) = \text{Angle}(\min(A, C), B, \max(A, C))$.
+    \item Với đường thẳng song song:
+    $$\text{Parallel}(AB, CD) \equiv \text{Parallel}(CD, AB) \equiv \text{Parallel}(BA, CD) \equiv \text{Parallel}(DC, AB)$$
+\end{itemize}
+
 \begin{algorithm}[h!]
 \caption{Thuật toán Suy diễn Tiến Hình học Phẳng (Forward Chaining with Canonical Normalization)}
 \label{alg:forward_chaining}
 \begin{algorithmic}[1]
-\Require Tập sự kiện ban đầu $\mathcal{F}_0$, Mục tiêu cần chứng minh $\mathcal{G}$, Tập quy tắc $\mathcal{R}$, Giới hạn lặp $MaxDepth$
-\Ensure Kết quả chứng minh $Success \in \{\text{True}, \text{False}\}$, Dấu vết thực thi $\mathcal{T}$
-\State $\mathcal{WM} \leftarrow \text{NormalizeFacts}(\mathcal{F}_0)$
+\Require Tập sự kiện ban đầu $\mathcal{F}_0$, Tập luật $\mathcal{R}$, Vị từ mục tiêu $\mathcal{G}$, Ngưỡng lặp cực đại $M$
+\Ensure Trạng thái chứng minh (\texttt{True/False}), Dấu vết suy diễn $\mathcal{T}$
+\State $\mathcal{WM} \leftarrow \bigcup_{f \in \mathcal{F}_0} \text{Canonical}(f)$
 \State $\mathcal{T} \leftarrow []$
-\State $iteration \leftarrow 0$
-\While{$iteration < MaxDepth$}
+\State $step \leftarrow 0$
+\While{$step < M$}
     \If{$\text{CheckGoal}(\mathcal{WM}, \mathcal{G})$}
-        \State \Return $\langle \text{True}, \mathcal{T}, \mathcal{WM} \rangle$
+        \State \Return \textbf{True}, $\mathcal{T}$ \Comment{Đã đạt được mục tiêu chứng minh}
     \EndIf
-    \State $NewFactsFound \leftarrow \text{False}$
+    \State $new\_facts \leftarrow \emptyset$
     \For{mỗi luật $r \in \mathcal{R}$}
-        \State $\Theta \leftarrow \text{FindAllSubstitutions}(\text{Inputs}(r), \mathcal{WM})$
-        \For{mỗi phép thế biến $\theta \in \Theta$}
-            \State $NewFacts \leftarrow \text{ApplySubstitution}(\text{Outputs}(r), \theta)$
-            \State $UnseenFacts \leftarrow \{f \in NewFacts \mid \text{Canonical}(f) \notin \mathcal{WM}\}$
-            \If{$UnseenFacts \neq \emptyset$}
-                \State $\mathcal{WM} \leftarrow \mathcal{WM} \cup UnseenFacts$
-                \State Thêm bước suy diễn $\langle r, \theta, UnseenFacts \rangle$ vào $\mathcal{T}$
-                \State $NewFactsFound \leftarrow \text{True}$
-            \EndIf
+        \State $bindings \leftarrow \text{UnifyMultiple}(\text{Inputs}(r), \mathcal{WM})$
+        \For{mỗi phép thế $\theta \in bindings$}
+            \State $conclusions \leftarrow \text{Substitute}(\text{Outputs}(r), \theta)$
+            \For{mỗi $c \in conclusions$}
+                \State $c_{can} \leftarrow \text{Canonical}(c)$
+                \If{$c_{can} \notin \mathcal{WM}$}
+                    \State $new\_facts \leftarrow new\_facts \cup \{c_{can}\}$
+                    \State $\mathcal{T} \leftarrow \mathcal{T} \cup \{\langle r, \theta, c_{can} \rangle\}$
+                \EndIf
+            \EndFor
         \EndFor
     \EndFor
-    \If{$\textbf{not } NewFactsFound$}
-        \State \textbf{break} \Comment{Đã đạt điểm bất động (Fixed Point) của suy diễn thuần túy}
+    \If{$new\_facts = \emptyset$}
+        \State \textbf{break} \Comment{Đạt trạng thái bão hòa (Bế tắc)}
     \EndIf
-    \State $iteration \leftarrow iteration + 1$
+    \State $\mathcal{WM} \leftarrow \mathcal{WM} \cup new\_facts$
+    \State $step \leftarrow step + 1$
 \EndWhile
-\State \Return $\langle \text{CheckGoal}(\mathcal{WM}, \mathcal{G}), \mathcal{T}, \mathcal{WM} \rangle$
+\State \Return \textbf{False}, $\mathcal{T}$
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Chuẩn hóa Đồng nhất và Quan hệ Tương đương (Canonical Equivalence)}
-Trong hình học, một đối tượng có thể được gọi bằng nhiều tên gọi tương đương, ví dụ:
-$$\text{Segment}(A, B) \equiv \text{Segment}(B, A)$$
-$$\text{Angle}(A, B, C) \equiv \text{Angle}(C, B, A)$$
-$$\text{Triangle}(A, B, C) \equiv \text{Triangle}(B, C, A) \equiv \text{Triangle}(C, B, A)$$
-$$\text{Congruent}(AB, CD) \equiv \text{Congruent}(CD, AB) \equiv \text{Congruent}(BA, CD) \equiv \text{Congruent}(DC, AB)$$
-
-Nếu không chuẩn hóa, động cơ suy diễn sẽ bị bùng nổ tổ hợp hoặc bỏ sót các phép so khớp biến. Hệ thống cài đặt bộ chuẩn hóa chính tắc (\texttt{Canonicalizer}) tự động sắp xếp thứ tự các đỉnh theo bảng chữ cái đối với các quan hệ có tính đối xứng trước khi nạp vào $\mathcal{WM}$.
-
 \section{Động cơ Suy diễn Đại số SymPy AR (Algebraic Reasoning)}
-Suy diễn hình thức dựa trên tập luật nếu-thì thuần túy (Pure Pattern Matching) gặp điểm yếu chí mạng khi đối mặt với các bài toán tính toán số đo liên tục, ví dụ:
-\begin{itemize}
-    \item Tổng ba góc trong tam giác: $\angle A + \angle B + \angle C = 180^\circ$.
-    \item Hệ thức lượng trong tam giác vuông: $\frac{1}{AH^2} = \frac{1}{AB^2} + \frac{1}{AC^2}$.
-    \item Phương tích đường tròn: $MA^2 = MC \cdot MD$.
-\end{itemize}
-Để khắc phục hoàn toàn hạn chế này, chúng tôi xây dựng phân hệ \textbf{SymPy AR (Algebraic Reasoning Engine)} dựa trên thư viện tính toán biểu thức đại số ký hiệu \textbf{SymPy}.
+Các quan hệ về góc (Angle Chasing) và độ dài đoạn thẳng thường đòi hỏi các phép biến đổi phương trình liên tục mà suy diễn vị từ rời rạc khó có thể bao quát hết mọi phép biến đổi tương đương. Do đó, hệ thống tích hợp động cơ đại số hình thức \textbf{SymPy AR} chạy song song với động cơ suy diễn tiến.
 
 \subsection{Cơ chế Hoạt động của SymPy AR}
 \begin{enumerate}
-    \item \textbf{Đại số hóa Vị từ (Equation Extraction)}: Quét toàn bộ các sự kiện dạng $\text{Equal}(\dots)$ trong $\mathcal{WM}$ và chuyển thành các phương trình đại số chứa biến ký hiệu:
-    $$\text{Equal}(\text{Angle}(A), 60) \implies \theta_A - 60 = 0$$
+    \item \textbf{Đại số hóa Vị từ (Equation Extraction)}: Chuyển các vị từ cộng góc $\text{Equal}(\text{Add}(\text{Angle}(A), \text{Angle}(B)), \text{Angle}(C))$ thành các phương trình đại số dạng biểu thức tượng trưng SymPy:
     $$\text{Equal}(\text{Add}(\text{Angle}(A), \text{Angle}(B), \text{Angle}(C)), 180) \implies \theta_A + \theta_B + \theta_C - 180 = 0$$
     \item \textbf{Khử Ẩn số và Giải Hệ Phương trình (Elimination \& Linear Solving)}: Sử dụng ma trận giải hệ phương trình tuyến tính hoặc phương pháp phần bù (Elimination Method) của SymPy để giải tìm giá trị ẩn số của mục tiêu:
     $$\theta_C = 180 - \theta_A - \theta_B = 180 - 60 - 70 = 50^\circ$$
@@ -83,26 +80,46 @@ Trong các bài toán hình học nâng cao (đặc biệt là đề thi học s
 
 \begin{figure}[h!]
 \centering
-\begin{tikzpicture}[scale=0.92, transform shape]
+\begin{tikzpicture}[scale=0.88, transform shape]
     % Left column
-    \node [base, fill=blue!12, draw=blue!80!black, text width=3.2cm] (start) at (-3.8, 0) {\textbf{Tập sự kiện ban đầu $\mathcal{F}_0$}\\[2pt]{\scriptsize (Working Memory)}};
-    \node [agent, fill=purple!15, draw=purple!80!black, text width=3.4cm] (aux) at (-3.8, -3.2) {\textbf{Auxiliary Agent (LLM)}\\[2pt]{\scriptsize Phân tích Gap \& Dựng hình phụ}};
+    \node [base, fill=blue!12, draw=blue!85!black, minimum width=3.8cm, minimum height=1.3cm, inner sep=6pt] (start) at (-4.5, 2.2) {
+        \textbf{Tập sự kiện ban đầu $\mathcal{F}_0$}\\[3pt]
+        {\scriptsize (Working Memory $\mathcal{WM}$)}
+    };
+    
+    \node [agent, fill=purple!15, draw=purple!85!black, minimum width=3.8cm, minimum height=1.3cm, inner sep=6pt] (aux) at (-4.5, -2.4) {
+        \textbf{Auxiliary Agent (LLM)}\\[3pt]
+        {\scriptsize Phân tích Gap \& Dựng hình phụ}
+    };
 
     % Center column
-    \node [process, fill=green!15, draw=green!65!black, text width=4.0cm] (forward) at (0.8, 0) {\textbf{Forward Deduction Engine}\\[2pt]{\scriptsize (Luật vị từ + FormalGeo)}};
-    \node [process, fill=yellow!18, draw=orange!75!black, text width=4.0cm] (sympy) at (0.8, -1.6) {\textbf{SymPy AR Engine}\\[2pt]{\scriptsize (Đại số hóa góc \& đoạn thẳng)}};
-    \node [decision, fill=yellow!18, draw=orange!80!black, text width=2.2cm] (goal_check) at (0.8, -3.2) {\textbf{Đạt}\\\textbf{Goal?}};
+    \node [process, fill=green!15, draw=green!65!black, minimum width=4.5cm, minimum height=1.3cm, inner sep=6pt] (forward) at (1.0, 2.2) {
+        \textbf{Forward Deduction Engine}\\[3pt]
+        {\scriptsize (Luật vị từ + FormalGeo)}
+    };
+    
+    \node [process, fill=yellow!18, draw=orange!75!black, minimum width=4.5cm, minimum height=1.3cm, inner sep=6pt] (sympy) at (1.0, -0.1) {
+        \textbf{SymPy AR Engine}\\[3pt]
+        {\scriptsize (Đại số hóa góc \& đoạn thẳng)}
+    };
+    
+    \node [decision, fill=yellow!18, draw=orange!85!black, minimum width=3.0cm, minimum height=1.4cm] (goal_check) at (1.0, -2.4) {
+        \textbf{Đạt}\\[1pt]\textbf{Goal?}
+    };
 
     % Right column
-    \node [base, fill=teal!18, draw=teal!80!black, text width=3.0cm] (done) at (4.8, -3.2) {\textbf{Hoàn thành! \faCheckCircle}\\[2pt]{\scriptsize Xuất lời giải logic}};
+    \node [base, fill=teal!18, draw=teal!85!black, minimum width=3.6cm, minimum height=1.3cm, inner sep=6pt] (done) at (6.2, -2.4) {
+        \textbf{Hoàn thành! \faCheckCircle}\\[3pt]
+        {\scriptsize Xuất lời giải logic}
+    };
 
-    % Arrows with clear labels
+    % Arrows with clear, non-overlapping labels
     \draw [arrow] (start) -- (forward);
     \draw [arrow] (forward) -- (sympy);
     \draw [arrow] (sympy) -- (goal_check);
-    \draw [arrow] (goal_check) -- node[above=3pt, font=\footnotesize\bfseries, text=teal!80!black] {Có} (done);
-    \draw [arrow] (goal_check) -- node[above=3pt, font=\footnotesize\bfseries, text=red!80!black] {Bế tắc} (aux);
-    \draw [arrow] (aux) -- node[left=3pt, font=\footnotesize\itshape, text=purple!90!black, align=center] {Nạp hình phụ\\vào $\mathcal{WM}$} (start);
+    \draw [arrow] (goal_check.east) -- node[above=3pt, font=\bfseries\small, text=teal!85!black] {Có} (done.west);
+    \draw [arrow] (goal_check.west) -- node[above=3pt, font=\bfseries\small, text=red!85!black] {Bế tắc} (aux.east);
+    \draw [arrow] (aux.north) -- node[left=4pt, font=\itshape\footnotesize, text=purple!90!black, align=right] {Nạp hình phụ\\vào $\mathcal{WM}$} (start.south);
 \end{tikzpicture}
 \caption{Quy trình phối hợp toàn diện giữa Suy diễn tiến, SymPy AR và Tác tử Sinh hình phụ.}
 \label{fig:full_reasoning_flow}
@@ -119,5 +136,4 @@ Khi cỗ máy suy diễn đạt điểm bất động mà chưa đạt mục ti�
         \item Dựng đường cao hoặc đường vuông góc: $\text{Perpendicular}(AH, BC)$.
         \item Nối hai đỉnh chưa liên kết để tạo tam giác đồng dạng.
     \end{itemize}
-    \item \textbf{Cập nhật Không gian Trạng thái}: Các đối tượng mới được thêm vào $\mathcal{WM}$ cùng với các tiên đề định nghĩa liên quan, mở đường cho Động cơ Suy diễn tiếp tục bứt phá để đi đến lời giải cuối cùng.
 \end{enumerate}
