@@ -88,6 +88,31 @@ class ForwardChainingEngine:
             s = re.sub(r"Congruent\(([A-Z]{2}),([A-Z]{2})\)", lambda m: f"Congruent({''.join(sorted(m.group(1)))},{''.join(sorted(m.group(2)))})", s)
             return s
 
+        def _split_and_goals(s: str) -> list:
+            """Split And(G1, G2, ...) handling nested parentheses."""
+            s = s.strip().replace(" ", "")
+            if not (s.startswith("And(") and s.endswith(")")):
+                return [s]
+            inner = s[4:-1].strip()
+            sub_goals = []
+            current = []
+            depth = 0
+            for char in inner:
+                if char == "(":
+                    depth += 1
+                    current.append(char)
+                elif char == ")":
+                    depth -= 1
+                    current.append(char)
+                elif char == "," and depth == 0:
+                    sub_goals.append("".join(current).strip())
+                    current = []
+                else:
+                    current.append(char)
+            if current:
+                sub_goals.append("".join(current).strip())
+            return sub_goals
+
         def _goal_aliases(goal_value: str) -> list:
             """Return semantically equivalent goal forms."""
             aliases = [goal_value]
@@ -109,45 +134,54 @@ class ForwardChainingEngine:
                 seg_rev = seg[::-1]
                 if seg_rev != seg:
                     aliases.append(f"Equal(Length({seg_rev}),{m4.group(2)})")
-            return aliases
+            # CyclicQuadrilateral / Concyclic permutations (rotations & reflections)
+            m_cyc = re.match(r"(?:CyclicQuadrilateral|Concyclic)\(([A-Z]),([A-Z]),([A-Z]),([A-Z])\)", goal_value)
+            if m_cyc:
+                pts = list(m_cyc.groups())
+                for i in range(4):
+                    rot = pts[i:] + pts[:i]
+                    aliases.append(f"CyclicQuadrilateral({rot[0]},{rot[1]},{rot[2]},{rot[3]})")
+                    aliases.append(f"Concyclic({rot[0]},{rot[1]},{rot[2]},{rot[3]})")
+                    rev = rot[::-1]
+                    aliases.append(f"CyclicQuadrilateral({rev[0]},{rev[1]},{rev[2]},{rev[3]})")
+                    aliases.append(f"Concyclic({rev[0]},{rev[1]},{rev[2]},{rev[3]})")
+            return list(set(aliases))
+
+        def _check_single_subgoal(sub_gval: str) -> bool:
+            # ── Compute(X) goal: resolved if X has a numeric value ────
+            m_compute = re.fullmatch(r"Compute\((.+)\)", sub_gval)
+            if m_compute:
+                inner = m_compute.group(1)
+                for wm_val in _wm_values():
+                    wm_val = wm_val.strip().replace(" ", "")
+                    if re.fullmatch(rf"Equal\({re.escape(inner)},[\d.]+\)", wm_val):
+                        return True
+                return sympy_ar.check_numeric_goal(f"Equal({inner},0)", _wm_values()) is not None
+
+            canon_sub = _canonicalize_geometry_str(sub_gval)
+            canon_wm = {_canonicalize_geometry_str(f.value) for f in working_memory}
+            if canon_sub in canon_wm:
+                return True
+
+            for alias in _goal_aliases(sub_gval):
+                if alias in {f.value for f in working_memory} or _canonicalize_geometry_str(alias) in canon_wm:
+                    return True
+
+            if check_numeric_goal(sub_gval, _wm_values(), arith.registry):
+                return True
+
+            if sympy_ar.check_numeric_goal(sub_gval, _wm_values()):
+                return True
+
+            return False
 
         def _check_goal() -> bool:
             if not goal:
                 return False
 
             gval = goal.value.strip().replace(" ", "")
-
-            # ── Compute(X) goal: resolved if X has a numeric value ────
-            m_compute = re.fullmatch(r"Compute\((.+)\)", gval)
-            if m_compute:
-                inner = m_compute.group(1)
-                # Check if any Equal(inner, number) is in WM
-                for wm_val in _wm_values():
-                    wm_val = wm_val.strip().replace(" ", "")
-                    if re.fullmatch(rf"Equal\({re.escape(inner)},[\d.]+\)", wm_val):
-                        return True
-                # Check numeric registry via SymPy
-                return sympy_ar.check_numeric_goal(f"Equal({inner},0)", _wm_values()) is not None
-            
-            # ── Standard goal: check exact & canonical matches in WM ─
-            canon_goal = _canonicalize_geometry_str(gval)
-            canon_wm = {_canonicalize_geometry_str(f.value) for f in working_memory}
-            if canon_goal in canon_wm:
-                return True
-
-            for alias in _goal_aliases(gval):
-                if alias in {f.value for f in working_memory} or _canonicalize_geometry_str(alias) in canon_wm:
-                    return True
-
-            # ── Numeric equivalence (handles float formatting differences)
-            if check_numeric_goal(gval, _wm_values(), arith.registry):
-                return True
-
-            # ── SymPy-based numeric check ─────────────────────────────
-            if sympy_ar.check_numeric_goal(gval, _wm_values()):
-                return True
-
-            return False
+            sub_goals = _split_and_goals(gval)
+            return all(_check_single_subgoal(sg) for sg in sub_goals)
 
         def _add_new_facts(new_strs: List[str], source_rule_id: str, source_repr: str) -> bool:
             """Add new fact strings to WM, record in trace. Returns True if any new."""

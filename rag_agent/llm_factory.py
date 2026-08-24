@@ -125,6 +125,14 @@ def get_llm(temperature: float = 0.3) -> Optional[object]:
     elif provider == "groq":
         from langchain_groq import ChatGroq
 
+        # Auto-correct safeguard or non-reasoning models
+        if "safeguard" in model.lower() or not model or model == "gpt-4o-mini":
+            logger.warning(
+                "Model '%s' is not an optimal Groq model. Auto-correcting to 'openai/gpt-oss-120b'.",
+                model,
+            )
+            model = "openai/gpt-oss-120b"
+
         # Collect all valid Groq keys
         groq_keys = []
         for i in range(1, 11):

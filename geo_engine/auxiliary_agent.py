@@ -70,34 +70,35 @@ class AuxiliaryConstructionAgent:
         facts_str = "\n".join(f"  - {f}" for f in current_facts)
         failed_str = "\n".join(f"  - {s}" for s in failed_steps) if failed_steps else "  (none)"
 
-        prompt_text = f"""You are a plane geometry expert helping a symbolic theorem prover (GeoIPS).
+        prompt_text = f"""You are a Neuro-Symbolic Geometry Theorem Prover & Bridge Generator (AlphaGeometry-inspired).
 
-The solver has these KNOWN FACTS:
+The symbolic solver has these KNOWN FACTS:
 {facts_str}
 
-The solver is trying to PROVE: {goal}
+The solver is trying to PROVE the TARGET GOAL: {goal}
 
-The following rules were tried but the goal remains unproved:
-{failed_str}
+The solver was not able to connect the facts to the goal using its static knowledge base rules.
+Please provide the logically sound intermediate lemmas, geometric theorems, or auxiliary constructions (points/lines/circles) that follow from the known facts and establish the goal.
 
-{CONSTRUCTION_EXAMPLES}
-
-Suggest up to {max_suggestions} auxiliary geometric constructions that might help prove the goal.
-For each suggestion:
-1. Briefly describe the construction in plain language.
-2. List the new formal predicates it adds to the working memory (using the same predicate syntax).
+Examples of deductions & bridges:
+- If two opposite angles are 90° (e.g. MA ⊥ OA and MB ⊥ OB), deduce: ["CyclicQuadrilateral(M,A,O,B)", "Concyclic(M,A,O,B)"]
+- If MA is tangent at A and MCD is secant to circle (O), deduce by Power of a Point: ["Equal(Pow(Length(MA),2),Mul(Length(MC),Length(MD)))", "Equal(Pow(Length(AM),2),Mul(Length(CM),Length(DM)))"]
+- If transversal DEF cuts triangle ABC (Menelaus), deduce: ["Equal(Mul(Div(Length(BD),Length(DC)),Mul(Div(Length(CE),Length(EA)),Div(Length(AF),Length(FB)))),1)"]
+- If feet X, Y, Z of perpendiculars from P on circumcircle to sides of ABC (Simson), deduce: ["Collinear(X,Y,Z)"]
 
 Respond in this EXACT JSON format (array of objects):
 [
   {{
-    "description": "Draw the altitude from A to BC",
-    "new_facts": ["Foot(H,A,BC)", "Perpendicular(AH,BC)", "RightAngle(Angle(AHB))", "RightAngle(Angle(AHC))"]
+    "description": "Theo định lý phương tích (tiếp tuyến MA và cát tuyến MCD đối với đường tròn O)",
+    "new_facts": ["Equal(Pow(Length(AM),2),Mul(Length(CM),Length(DM)))", "Equal(Pow(Length(MA),2),Mul(Length(MC),Length(MD)))"]
   }},
-  ...
+  {{
+    "description": "Tứ giác MAOB có hai góc đối vuông (MA ⊥ OA và MB ⊥ OB) nên nội tiếp đường tròn",
+    "new_facts": ["CyclicQuadrilateral(M,A,O,B)", "Concyclic(M,A,O,B)"]
+  }}
 ]
 
-Only suggest constructions that are logically valid given the known facts.
-Output ONLY the JSON array, no extra text."""
+Output ONLY the JSON array, no markdown wrapper or extra text."""
 
         try:
             from langchain_core.messages import HumanMessage
