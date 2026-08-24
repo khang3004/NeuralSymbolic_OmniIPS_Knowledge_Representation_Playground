@@ -1,0 +1,126 @@
+\documentclass[border=15pt,varwidth=32cm]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese,english]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, shadows.blur, fit, backgrounds}
+\usepackage{fontawesome5}
+
+\begin{document}
+\shorthandoff{"}
+
+\begin{tikzpicture}[
+    scale=0.98,
+    transform shape,
+    font=\sffamily,
+    ui_box/.style={
+        rectangle, rounded corners=8pt, draw=teal!80!black, fill=teal!12,
+        line width=1.4pt, text centered, inner sep=10pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
+    },
+    api_box/.style={
+        rectangle, rounded corners=8pt, draw=blue!85!black, fill=blue!12,
+        line width=1.4pt, text centered, inner sep=10pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
+    },
+    db_box/.style={
+        rectangle, rounded corners=8pt, draw=orange!90!black, fill=orange!12,
+        line width=1.4pt, text centered, inner sep=8pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
+    },
+    process_box/.style={
+        rectangle, rounded corners=8pt, draw=green!70!black, fill=green!12,
+        line width=1.4pt, text centered, inner sep=10pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
+    },
+    decision_box/.style={
+        diamond, aspect=2.4, draw=orange!90!black, fill=yellow!22,
+        line width=1.4pt, text centered, inner sep=6pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
+    },
+    agent_box/.style={
+        rectangle, rounded corners=8pt, draw=purple!85!black, fill=purple!12,
+        line width=1.4pt, text centered, inner sep=10pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
+    },
+    success_box/.style={
+        rectangle, rounded corners=8pt, draw=teal!90!black, fill=teal!22,
+        line width=1.4pt, text centered, inner sep=10pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
+    },
+    arrow/.style={
+        thick, ->, >=stealth, color=blue!90!black, line width=1.5pt
+    },
+    biarrow/.style={
+        thick, <->, >=stealth, color=blue!90!black, line width=1.5pt
+    }
+]
+
+    % ================= LEVEL 1: CLIENT / UI =================
+    \node [ui_box, text width=10.5cm] (ui) at (0, 6.2) {
+        \textbf{\large \faDesktop\ Streamlit Interactive UI (Port 8501)}\\[3pt]
+        {\small Natural Language Input, Interactive \LaTeX\ Proof Tree \& Stream}
+    };
+
+    % ================= LEVEL 2: API & KNOWLEDGE STORAGE =================
+    \node [db_box, text width=4.4cm] (neo4j) at (-8.0, 3.0) {
+        \textbf{\large \faProjectDiagram\ Neo4j Graph DB}\\[3pt]
+        {\small \textbf{1,128 Nodes, 1,532 Rel}}\\[2pt]
+        {\footnotesize Formal Axioms \& Theorems}
+    };
+
+    \node [api_box, text width=6.8cm] (gateway) at (0, 3.0) {
+        \textbf{\large \faServer\ FastAPI Gateway \& Router}\\[3pt]
+        {\small Query Normalization, Predicate Dispatcher}\\[2pt]
+        {\footnotesize GraphRAG Theorem Matcher}
+    };
+
+    \node [db_box, text width=4.4cm] (qdrant) at (8.0, 3.0) {
+        \textbf{\large \faCloud\ Qdrant Vector DB}\\[3pt]
+        {\small \textbf{Cloud Vector Collections}}\\[2pt]
+        {\footnotesize Dense Semantic Rule Index}
+    };
+
+    % ================= LEVEL 3: REASONING ENGINES =================
+    \node [process_box, text width=7.2cm] (dd) at (-4.8, 0.0) {
+        \textbf{\large \faCogs\ \mbox{Forward Chaining (DD Engine)}}\\[3pt]
+        {\small Unification, Modus Ponens \& Working Memory $\mathcal{WM}$}
+    };
+
+    \node [db_box, text width=5.8cm] (ar) at (4.8, 0.0) {
+        \textbf{\large \faCalculator\ SymPy AR Engine}\\[3pt]
+        {\small Angle Chasing \& Metric Linear Systems}
+    };
+
+    % ================= LEVEL 4: DECISION POINT =================
+    \node [decision_box, text width=4.5cm] (check) at (0, -2.6) {
+        \textbf{\large Target Goal $\mathcal{G}$}\\[3pt]\textbf{\large Satisfied?}
+    };
+
+    % ================= LEVEL 5: OUTCOMES =================
+    \node [agent_box, text width=6.2cm] (aux) at (-5.2, -5.2) {
+        \textbf{\large \faRobot\ LLM Auxiliary Agent}\\[3pt]
+        {\small Proof Gap Analysis \& Object Construction}
+    };
+
+    \node [success_box, text width=6.2cm] (success) at (5.2, -5.2) {
+        \textbf{\large \faCheckCircle\ Verified Proof Output}\\[3pt]
+        {\small Step-by-Step Rigorous Mathematical Trace}
+    };
+
+    % ================= CONNECTING ARROWS =================
+    \draw [biarrow] (ui.south) -- node[right=6pt, font=\bfseries\small, text=blue!90!black] {HTTP / REST \& SSE Stream} (gateway.north);
+    
+    \draw [biarrow] (gateway.west) -- node[above=5pt, font=\bfseries\footnotesize, text=teal!85!black] {Cypher Query} (neo4j.east);
+    \draw [biarrow] (gateway.east) -- node[above=5pt, font=\bfseries\footnotesize, text=orange!95!black] {Vector Search} (qdrant.west);
+
+    \draw [arrow] (gateway.south) -- ++(0, -0.6) -| node[near end, left=4pt, font=\bfseries\footnotesize, text=blue!90!black] {Parsed $\mathcal{F}_0, \mathcal{G}$} (dd.north);
+    \draw [biarrow, color=orange!90!black] (dd.east) -- node[above=5pt, font=\bfseries\footnotesize, text=orange!95!black] {Equation Exchange} (ar.west);
+    
+    \draw [arrow] (dd.south) |- (check.155);
+    \draw [arrow, color=orange!90!black] (ar.south) |- (check.25);
+
+    \draw [arrow] (check.west) -| node[near start, above=3pt, font=\bfseries\small, text=red!85!black] {NO (Saturation / Proof Gap)} (aux.north);
+    \draw [arrow] (check.east) -| node[near start, above=3pt, font=\bfseries\small, text=teal!85!black] {YES (Proof Found)} (success.north);
+
+    \draw [arrow, dashed, color=purple!85!black] (aux.west) -- ++(-1.4, 0) |- node[near start, left=4pt, font=\bfseries\footnotesize, text=purple!90!black, align=right] {Inject Auxiliary\\Objects into $\mathcal{WM}$} (dd.west);
+
+    \draw [arrow, color=teal!85!black] (success.east) -- ++(1.4, 0) |- node[near start, right=4pt, font=\bfseries\footnotesize, text=teal!90!black, align=left] {Return Formal\\Proof Trace} (ui.east);
+
+\end{tikzpicture}
+
+\end{document}

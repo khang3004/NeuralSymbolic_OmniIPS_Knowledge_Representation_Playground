@@ -35,29 +35,38 @@
 
 ## 🏛️ System Architecture
 
-```mermaid
-graph TD
-    User["👤 User Query (Natural Language / Predicates)"] -->|HTTP / REST| API["⚡ FastAPI Gateway & Router"]
-    
-    subgraph "🧠 GraphRAG & Vector Retrieval"
-        API -->|Dense Semantic Search| Qdrant[("🔴 Qdrant Vector DB<br/>(Rules & Facts Payload)")]
-        API -->|Cypher Graph Query| Neo4j[("🔷 Neo4j Graph DB<br/>(1,128 Nodes / 1,532 Rel)")]
-        Qdrant -->|Matching Rules & Axioms| API
-        Neo4j -->|Structured Theorem Graph| API
-    end
+<div align="center">
 
-    subgraph "⚙️ Neuro-Symbolic Hybrid Core"
-        API -->|Parsed Fact Set F₀ & Goal G| DD["🧩 Symbolic Forward Chaining (DD)"]
-        DD <-->|Equation Extraction & Solving| AR["📐 SymPy AR Engine (Angle & Length)"]
-        DD -->|Goal Reached?| Decision{"Goal Satisfied?"}
-        
-        Decision -->|No (Saturation / Proof Gap)| AuxAgent["🤖 LLM Auxiliary Agent (Gemini / Groq)"]
-        AuxAgent -->|Inject Auxiliary Points & Lines| DD
-    end
+![AlphaGeometry-IMO System Architecture](./assets/system_architecture_diagram.png)
 
-    Decision -->|Yes (Proof Path Found)| Explain["📝 Pedagogical Proof Generator"]
-    Explain -->|SSE Streaming & LaTeX Proof Tree| UI["🖥️ Streamlit Interactive UI"]
+</div>
+
+The architecture consists of four tightly-coupled neuro-symbolic layers:
+1. **Presentation Layer (Streamlit UI)**: Handles natural language geometry input, live SSE proof streaming, and interactive step-by-step LaTeX proof tree exploration.
+2. **API Gateway & GraphRAG Routing Layer (FastAPI, Neo4j, Qdrant)**: Normalizes geometry predicates, executes dense semantic search over rule vector embeddings, and performs Cypher traversal over 1,128 formal Euclidean axiom nodes.
+3. **Hybrid Reasoning Core (Symbolic DD + SymPy AR)**: Performs forward-chaining deduction with structural unification over working memory $\mathcal{WM}$, while delegating angle chasing ($\sum \angle = 180^\circ$) and segment ratio systems to the continuous computer algebra engine.
+4. **Neuro-Symbolic Auxiliary Construction Loop (LLM Agent)**: When the symbolic core reaches saturation without satisfying the goal predicate (Proof Gap), the LLM agent analyzes the missing proof constraints and injects auxiliary geometric entities (points, altitudes, circumcircles) to resume deduction.
+
+<details>
+<summary>📐 <b>View TikZ Vector Source Code</b></summary>
+
+```latex
+\begin{tikzpicture}[
+    scale=0.98,
+    font=\sffamily,
+    ui_box/.style={rectangle, rounded corners=8pt, draw=teal!80!black, fill=teal!12, line width=1.4pt, text centered, inner sep=10pt},
+    api_box/.style={rectangle, rounded corners=8pt, draw=blue!85!black, fill=blue!12, line width=1.4pt, text centered, inner sep=10pt},
+    db_box/.style={rectangle, rounded corners=8pt, draw=orange!90!black, fill=orange!12, line width=1.4pt, text centered, inner sep=8pt},
+    process_box/.style={rectangle, rounded corners=8pt, draw=green!70!black, fill=green!12, line width=1.4pt, text centered, inner sep=10pt},
+    decision_box/.style={diamond, aspect=2.4, draw=orange!90!black, fill=yellow!22, line width=1.4pt, text centered, inner sep=6pt},
+    agent_box/.style={rectangle, rounded corners=8pt, draw=purple!85!black, fill=purple!12, line width=1.4pt, text centered, inner sep=10pt},
+    success_box/.style={rectangle, rounded corners=8pt, draw=teal!90!black, fill=teal!22, line width=1.4pt, text centered, inner sep=10pt}
+]
+    % See latex_report/standalone_system_architecture.tex for full compilation source
+\end{tikzpicture}
 ```
+
+</details>
 
 ---
 
