@@ -49,12 +49,32 @@ def _get_embedding_model() -> SentenceTransformer:
 # Fallback regex-based parser (geometry only)
 # ---------------------------------------------------------------------------
 
+def clean_geometry_query(query: str) -> str:
+    """
+    Cleans raw user geometry query text, stripping LaTeX delimiters,
+    multiline OCR artifacts, and normalizing mathematical symbols.
+    """
+    if not query:
+        return ""
+    q = query
+    # Normalize LaTeX macros
+    q = q.replace("\\cdot", "*").replace("\\times", "*").replace("\\perp", " vuông góc ").replace("\\parallel", " song song ")
+    # Replace multiline newline noise (e.g. "(\n A\n ,\n B\n A,B ...)")
+    q = re.sub(r"\s+", " ", q).strip()
+    # Normalize ((O)) -> (O) or ((M)) -> (M)
+    q = re.sub(r"\(\(([A-Za-z0-9]+)\)\)", r"(\1)", q)
+    # Normalize ( MA , MB ) -> (MA, MB)
+    q = re.sub(r"\(\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*\)", r"(\1, \2)", q)
+    return q
+
+
 def fallback_query_parser(query: str) -> Tuple[List[str], str]:
     """
     Offline regex-based geometry query parser.
     Extracts predicates of the form Word(arg1, arg2, ...) from the query.
     Uses keyword position heuristics to split facts vs goal.
     """
+    query = clean_geometry_query(query)
     predicate_regex = r"\b[A-Za-z_]+\([A-Za-z0-9,\s_()\^\.]*\)"
     raw_preds = re.findall(predicate_regex, query)
 
@@ -100,14 +120,69 @@ def fallback_query_parser(query: str) -> Tuple[List[str], str]:
         elif cleaned not in extracted_facts:
             extracted_facts.append(cleaned)
 
+    # Keyword extraction for high school geometry (circles, tangents, secants)
+    circle_match = re.search(r"đường tròn\s*\(?([A-Z])\)?", query, re.IGNORECASE)
+    if circle_match:
+        c_center = circle_match.group(1).upper()
+        if f"Circle({c_center})" not in extracted_facts:
+            extracted_facts.append(f"Circle({c_center})")
+
+    point_outside = re.search(r"điểm\s*\(?([A-Z])\)?\s*nằm ngoài", query, re.IGNORECASE)
+    if point_outside and circle_match:
+        p_pt = point_outside.group(1).upper()
+        c_center = circle_match.group(1).upper()
+        fact = f"PointOutsideCircle({p_pt},Circle({c_center}))"
+        if fact not in extracted_facts:
+            extracted_facts.append(fact)
+
+    tangents = re.findall(r"tiếp tuyến\s*\(?([A-Z]{2})\)?", query, re.IGNORECASE)
+    for tg in tangents:
+        tg_upper = tg.upper()
+        if len(tg_upper) == 2 and circle_match:
+            c_center = circle_match.group(1).upper()
+            fact = f"TangentSegment({tg_upper[0]},{tg_upper[1]},Circle({c_center}))"
+            if fact not in extracted_facts:
+                extracted_facts.append(fact)
+
+    secants = re.findall(r"cát tuyến\s*\(?([A-Z]{3})\)?", query, re.IGNORECASE)
+    for sc in secants:
+        sc_upper = sc.upper()
+        if len(sc_upper) == 3 and circle_match:
+            c_center = circle_match.group(1).upper()
+            fact = f"SecantSegment({sc_upper[0]},{sc_upper[1]},{sc_upper[2]},Circle({c_center}))"
+            if fact not in extracted_facts:
+                extracted_facts.append(fact)
+
+    # Catch cyclic quadrilateral goal
+    cyclic_goal = ""
+    cyclic_match = re.search(r"tứ giác\s*\(?([A-Z]{4})\)?\s*nội tiếp", query, re.IGNORECASE)
+    if cyclic_match:
+        q_pts = cyclic_match.group(1).upper()
+        cyclic_goal = f"CyclicQuadrilateral({q_pts[0]},{q_pts[1]},{q_pts[2]},{q_pts[3]})"
+
+    # Catch power equality goal (e.g. MA^2 = MC * MD)
+    metric_goal = ""
+    metric_match = re.search(r"([A-Z]{2})\^2\s*=\s*([A-Z]{2})\s*[\*\.]\s*([A-Z]{2})", query)
+    if metric_match:
+        s1, s2, s3 = metric_match.group(1).upper(), metric_match.group(2).upper(), metric_match.group(3).upper()
+        metric_goal = f"Equal(Pow(Length({s1}),2),Mul(Length({s2}),Length({s3})))"
+
+    if cyclic_goal and metric_goal:
+        extracted_goal = f"And({cyclic_goal},{metric_goal})"
+    elif cyclic_goal:
+        extracted_goal = cyclic_goal
+    elif metric_goal:
+        extracted_goal = metric_goal
+
     # Also catch things like "BC^2=AB^2+AC^2" (Pythagorean equality)
-    eq_regex = r"\b[A-Za-z0-9\^\+\-]+=[A-Za-z0-9\^\+\-\*]+\b"
-    for eq in re.findall(eq_regex, query):
-        if "=" in eq and eq not in extracted_facts and eq != extracted_goal:
-            if prove_idx != -1 and query.find(eq) > prove_idx and not extracted_goal:
-                extracted_goal = eq
-            elif eq not in extracted_facts:
-                extracted_facts.append(eq)
+    if not extracted_goal:
+        eq_regex = r"\b[A-Za-z0-9\^\+\-]+=[A-Za-z0-9\^\+\-\*]+\b"
+        for eq in re.findall(eq_regex, query):
+            if "=" in eq and eq not in extracted_facts and eq != extracted_goal:
+                if prove_idx != -1 and query.find(eq) > prove_idx and not extracted_goal:
+                    extracted_goal = eq
+                elif eq not in extracted_facts:
+                    extracted_facts.append(eq)
 
     if not extracted_goal and extracted_facts:
         extracted_goal = "Congruent(AB,EF)"
@@ -135,6 +210,9 @@ def llm_query_parser(query: str) -> Tuple[List[str], str]:
     """
     from rag_agent.llm_factory import get_llm
     from typing import List as TypingList
+    import json
+
+    query = clean_geometry_query(query)
 
     llm = get_llm(temperature=0.0)
 
@@ -151,14 +229,15 @@ def llm_query_parser(query: str) -> Tuple[List[str], str]:
                 ...,
                 description=(
                     "List of formal geometry predicates representing known conditions. "
-                    "E.g. ['Triangle(A,B,C)', 'Congruent(AB,AC)', 'RightAngle(Angle(BAC))']"
+                    "E.g. ['Triangle(A,B,C)', 'Equal(Length(AC),3)', 'RightAngle(Angle(ACB))']"
                 ),
             )
             goal_fact: str = Field(
                 ...,
                 description=(
-                    "The single target fact to prove or deduce. "
-                    "E.g. 'Equal(Angle(ABC),Angle(ACB))' or 'BC^2=AB^2+AC^2'"
+                    "The single target fact to prove or compute. "
+                    "For PROVE problems: 'Equal(Angle(ABC),Angle(ACB))' or 'Perpendicular(AC,BD)'. "
+                    "For compound goals with multiple parts: 'And(G1, G2)'."
                 ),
             )
 
@@ -170,79 +249,68 @@ def llm_query_parser(query: str) -> Tuple[List[str], str]:
             "- Segments: AB, BC (two adjacent uppercase letters, no space)\n"
             "- Angles: Angle(BAC) — vertex is the MIDDLE letter (∠BAC has vertex A)\n"
             "- Triangle: Triangle(A,B,C)\n"
-            "- Right Triangle: RightTriangle(A,B,C) + RightAngle(Angle(BAC)) for right angle at A\n"
-            "- SEGMENT congruence (2-letter args): Congruent(AB,CD) — AB ≅ CD\n"
-            "- TRIANGLE congruence (3-letter args): CongruentTriangles(ABC,DEF) — △ABC ≅ △DEF\n"
-            "  *** CRITICAL: 'hai tam giác bằng nhau' → CongruentTriangles, NOT Congruent ***\n"
-            "- Equality: Equal(Angle(ABC),Angle(DEF)) or Equal(Angle(ACB),50)\n"
+            "- Right Triangle: RightTriangle(A,B,C) + RightAngle(Angle(BAC))\n"
+            "- Circle: Circle(O) or PointOnCircle(P,Circle(O))\n"
+            "- Point outside circle: PointOutsideCircle(M,Circle(O))\n"
+            "- Tangent segment: TangentSegment(M,A,Circle(O))\n"
+            "- Secant segment: SecantSegment(M,C,D,Circle(O))\n"
+            "- Cyclic Quadrilateral: CyclicQuadrilateral(M,A,O,B)\n"
+            "- Equality of lengths / powers: Equal(Pow(Length(MA),2),Mul(Length(MC),Length(MD)))\n"
+            "- Midpoint: Midpoint(M,AB)\n"
+            "- Foot/Altitude: Foot(H,A,BC)\n"
             "- Parallel: Parallel(AB,CD)\n"
             "- Perpendicular: Perpendicular(AB,CD)\n"
-            "- Isosceles: Triangle(A,B,C) + Congruent(AB,AC) for apex A\n"
-            "- Pythagorean: BC^2=AB^2+AC^2\n"
-            "- Circle: Circle(O,r) or PointOnCircle(P,Circle(O))\n"
-            "- Midpoint: Midpoint(M,AB)\n"
-            "- Foot/Altitude: Foot(H,A,BC) — H is the foot of the perpendicular from A to BC\n\n"
-            "=== CRITICAL DISTINCTION ===\n"
-            "Congruent(AB,DE)       ← SEGMENT congruence (2-letter args)\n"
-            "CongruentTriangles(ABC,DEF) ← TRIANGLE congruence (3-letter args)\n\n"
+            "- Compound goal: And(CyclicQuadrilateral(M,A,O,B), Equal(Pow(Length(MA),2), Mul(Length(MC),Length(MD))))\n\n"
             "=== EXAMPLES ===\n"
+            "'Cho đường tròn (O) và điểm M nằm ngoài đường tròn. Từ M vẽ hai tiếp tuyến MA, MB với (O). Vẽ cát tuyến MCD. Chứng minh tứ giác MAOB nội tiếp và MA^2 = MC * MD.'\n"
+            "→ facts: ['Circle(O)', 'PointOutsideCircle(M,Circle(O))', 'TangentSegment(M,A,Circle(O))', 'TangentSegment(M,B,Circle(O))', 'SecantSegment(M,C,D,Circle(O))'], goal: 'And(CyclicQuadrilateral(M,A,O,B), Equal(Pow(Length(MA),2), Mul(Length(MC),Length(MD))))'\n\n"
             "'Cho tam giác ABC cân tại A. CM góc B bằng góc C'\n"
             "→ facts: ['Triangle(A,B,C)', 'Congruent(AB,AC)'], goal: 'Equal(Angle(ABC),Angle(ACB))'\n\n"
-            "'Cho tam giác ABC và DEF. Biết AB=DE, AC=DF, góc BAC = góc EDF. CM △ABC bằng △DEF'\n"
-            "→ facts: ['Triangle(A,B,C)', 'Triangle(D,E,F)', 'Congruent(AB,DE)', 'Congruent(AC,DF)', 'Equal(Angle(BAC),Angle(EDF))'], goal: 'CongruentTriangles(ABC,DEF)'\n\n"
-            "'Cho tam giác ABC có AB=AC=BC. CM góc A bằng 60 độ'\n"
-            "→ facts: ['Triangle(A,B,C)', 'Congruent(AB,AC)', 'Congruent(AB,BC)'], goal: 'Equal(Angle(BAC),60)'\n\n"
-            "'Given right triangle ABC with right angle at A, prove BC^2=AB^2+AC^2'\n"
-            "→ facts: ['RightTriangle(A,B,C)', 'RightAngle(Angle(BAC))'], goal: 'BC^2=AB^2+AC^2'\n\n"
-            "'Cho tam giác ABC vuông tại A. H là hình chiếu của A lên BC. CM 1/AH^2 = 1/AB^2 + 1/AC^2'\n"
-            "→ facts: ['RightTriangle(A,B,C)', 'RightAngle(Angle(BAC))', 'Foot(H,A,BC)'], goal: '1/AH^2 = 1/AB^2 + 1/AC^2'\n\n"
-            "'If Parallel(AB,CD) and Parallel(CD,EF), prove Parallel(AB,EF)'\n"
-            "→ facts: ['Parallel(AB,CD)', 'Parallel(CD,EF)'], goal: 'Parallel(AB,EF)'\n\n"
             "'Cho tam giác ABC. Biết góc A = 60, góc B = 70. CM góc C = 50'\n"
             "→ facts: ['Triangle(A,B,C)', 'Equal(Angle(BAC),60)', 'Equal(Angle(ABC),70)'], goal: 'Equal(Angle(ACB),50)'\n\n"
-            "'Cho đường tròn O có hai dây cung AB và CD cắt nhau tại P. CM PA*PB = PC*PD'\n"
-            "→ facts: ['Circle(O)', 'PointOnCircle(A,Circle(O))', 'PointOnCircle(B,Circle(O))', 'PointOnCircle(C,Circle(O))', 'PointOnCircle(D,Circle(O))', 'IntersectionPoint(P,AB,CD)'], goal: 'Equal(PA*PB,PC*PD)'\n\n"
-            "'Cho điểm P nằm ngoài đường tròn O. Vẽ cát tuyến PAB và tiếp tuyến PT. CM PT^2 = PA*PB'\n"
-            "→ facts: ['Circle(O)', 'PointOutsideCircle(P,Circle(O))', 'TangentSegment(P,T,Circle(O))', 'SecantSegment(P,A,B,Circle(O))'], goal: 'Equal(PT^2,PA*PB)'\n\n"
+            "'Cho tam giác ABC vuông tại A. H là hình chiếu của A lên BC. CM 1/AH^2 = 1/AB^2 + 1/AC^2'\n"
+            "→ facts: ['RightTriangle(A,B,C)', 'RightAngle(Angle(BAC))', 'Foot(H,A,BC)'], goal: 'Equal(Div(1,Pow(Length(AH),2)),Add(Div(1,Pow(Length(AB),2)),Div(1,Pow(Length(AC),2))))'\n\n"
             "'Cho tứ giác ABCD là hình thoi. CM AC vuông góc BD'\n"
             "→ facts: ['Rhombus(A,B,C,D)'], goal: 'Perpendicular(AC,BD)'\n\n"
-            "'Cho tứ giác nội tiếp ABCD. CM AC*BD = AB*CD + BC*AD'\n"
-            "→ facts: ['CyclicQuadrilateral(A,B,C,D)'], goal: 'AC*BD = AB*CD + BC*AD'\n\n"
-            "'Cho tam giác ABC. Các đường AD, BE, CF đồng quy tại P (với D trên BC, E trên AC, F trên AB). CM (BD/DC)*(CE/EA)*(AF/FB) = 1'\n"
-            "→ facts: ['Triangle(A,B,C)', 'PointOnSegment(D,B,C)', 'PointOnSegment(E,A,C)', 'PointOnSegment(F,A,B)', 'Concurrent(AD,BE,CF)'], goal: '(BD/DC)*(CE/EA)*(AF/FB) = 1'\n\n"
-            "'Cho tam giác ABC. Một đường thẳng cắt các đường BC, CA, AB tại D, E, F sao cho D, E, F thẳng hàng. CM (BD/DC)*(CE/EA)*(AF/FB) = 1'\n"
-            "→ facts: ['Triangle(A,B,C)', 'Collinear(D,E,F)', 'PointOnLine(D,B,C)', 'PointOnLine(E,C,A)', 'PointOnLine(F,A,B)'], goal: '(BD/DC)*(CE/EA)*(AF/FB) = 1'\n\n"
-            "'Cho tam giác ABC có đường tròn ngoại tiếp O. P là một điểm trên O. X, Y, Z là hình chiếu của P lên AB, BC, CA. CM X, Y, Z thẳng hàng'\n"
-            "→ facts: ['Triangle(A,B,C)', 'Circumcircle(O,A,B,C)', 'PointOnCircle(P,Circle(O))', 'Foot(X,P,AB)', 'Foot(Y,P,BC)', 'Foot(Z,P,CA)'], goal: 'Collinear(X,Y,Z)'\n\n"
             "Output ONLY the parsed structures. Do NOT solve the problem."
         )
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", "Parse this geometry problem: {query}")
-        ])
+        from langchain_core.messages import SystemMessage, HumanMessage
+
+        system_prompt += '\n\nOutput ONLY a valid JSON object in this format:\n{\n  "initial_facts": ["Predicate1(...)"],\n  "goal_fact": "GoalPredicate(...)"\n}'
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=f"Parse this geometry problem: {query}")
+        ]
 
         logger.info("Calling LLM geometry parser...")
 
+        facts = []
+        goal = ""
+
         try:
-            structured_llm = llm.with_structured_output(ExtractedGeoProblem)
-            chain = prompt | structured_llm
-            response = chain.invoke({"query": query})
-            facts, goal = response.initial_facts, response.goal_fact
+            raw_resp = llm.invoke(messages)
+            content = raw_resp.content if hasattr(raw_resp, "content") else str(raw_resp)
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                parsed_json = json.loads(json_match.group(0))
+                facts = parsed_json.get("initial_facts", [])
+                goal = parsed_json.get("goal_fact", "")
         except Exception as e:
-            logger.info("Structured output failed (%s). Using JSON parser.", e)
-            from langchain_core.output_parsers import JsonOutputParser
-            parser = JsonOutputParser(pydantic_object=ExtractedGeoProblem)
-            prompt_with_fmt = ChatPromptTemplate.from_messages([
-                ("system", system_prompt + "\n\nOutput ONLY valid JSON:\n{format_instructions}"),
-                ("human", "{query}")
-            ])
-            chain = prompt_with_fmt | llm | parser
-            response = chain.invoke({
-                "query": query,
-                "format_instructions": parser.get_format_instructions()
-            })
-            facts, goal = response["initial_facts"], response["goal_fact"]
+            logger.info("Direct JSON invoke failed (%s). Trying structured output.", e)
+            try:
+                structured_llm = llm.with_structured_output(ExtractedGeoProblem)
+                response = structured_llm.invoke(messages)
+                if hasattr(response, "initial_facts"):
+                    facts, goal = response.initial_facts, response.goal_fact
+                elif isinstance(response, dict):
+                    facts, goal = response.get("initial_facts", []), response.get("goal_fact", "")
+            except Exception as e2:
+                logger.error("Structured output fallback failed: %s", e2)
+
+        if not facts and not goal:
+            logger.warning("LLM returned empty facts/goal. Using regex fallback.")
+            return fallback_query_parser(query)
 
         logger.info("[LLM Parser] Extracted facts: %s, goal: %s", facts, goal)
         return facts, goal

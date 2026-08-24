@@ -37,26 +37,7 @@ EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 EMBEDDING_DIMENSION = 384
 
 
-def get_qdrant_client(max_retries: int = 5, backoff_base: float = 2.0) -> QdrantClient:
-    """Creates a Qdrant client with retry logic for startup robustness."""
-    qdrant_host = os.getenv("QDRANT_HOST", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", 6333))
-
-    for attempt in range(1, max_retries + 1):
-        try:
-            client = QdrantClient(host=qdrant_host, port=qdrant_port)
-            # Verify connectivity
-            client.get_collections()
-            logger.info("Connected to Qdrant at %s:%d (attempt %d)", qdrant_host, qdrant_port, attempt)
-            return client
-        except Exception as e:
-            if attempt == max_retries:
-                logger.error("Failed to connect to Qdrant after %d attempts: %s", max_retries, e)
-                sys.exit(1)
-            wait_time = backoff_base ** attempt
-            logger.warning("Qdrant connection attempt %d/%d failed: %s. Retrying in %.1fs...",
-                           attempt, max_retries, e, wait_time)
-            time.sleep(wait_time)
+from graph_db.qdrant_factory import get_qdrant_client
 
 
 def get_neo4j_facts_and_rules() -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
@@ -112,30 +93,38 @@ def ingest_to_qdrant(facts: List[Dict[str, Any]], rules: List[Dict[str, Any]]) -
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     # Recreate collection for Facts
-    logger.info("Recreating Qdrant collection 'omni_ips_facts'...")
+    logger.info("Recreating Qdrant collection 'geometry_facts'...")
     try:
-        client.delete_collection("omni_ips_facts")
+        client.delete_collection("geometry_facts")
     except Exception:
         pass
     client.create_collection(
-        collection_name="omni_ips_facts",
+        collection_name="geometry_facts",
         vectors_config=VectorParams(size=EMBEDDING_DIMENSION, distance=Distance.COSINE)
     )
 
-    # Recreate collection for Rules
-    logger.info("Recreating Qdrant collection 'omni_ips_rules'...")
+    # Create payload indices for fast exact value & label lookup
     try:
-        client.delete_collection("omni_ips_rules")
+        from qdrant_client.models import PayloadSchemaType
+        client.create_payload_index("geometry_facts", "value", PayloadSchemaType.KEYWORD)
+        client.create_payload_index("geometry_facts", "label", PayloadSchemaType.KEYWORD)
+    except Exception as e:
+        logger.debug("Could not create payload index: %s", e)
+
+    # Recreate collection for Rules
+    logger.info("Recreating Qdrant collection 'geometry_rules'...")
+    try:
+        client.delete_collection("geometry_rules")
     except Exception:
         pass
     client.create_collection(
-        collection_name="omni_ips_rules",
+        collection_name="geometry_rules",
         vectors_config=VectorParams(size=EMBEDDING_DIMENSION, distance=Distance.COSINE)
     )
 
     # Ingest Facts
     if facts:
-        logger.info("Embedding and uploading Facts into Qdrant...")
+        logger.info("Embedding and uploading Facts into Qdrant 'geometry_facts'...")
         documents = []
         points = []
 
@@ -164,12 +153,12 @@ def ingest_to_qdrant(facts: List[Dict[str, Any]], rules: List[Dict[str, Any]]) -
             ))
 
         # Bulk upload
-        client.upsert(collection_name="omni_ips_facts", points=points)
-        logger.info("Successfully ingested %d Fact vectors.", len(facts))
+        client.upsert(collection_name="geometry_facts", points=points)
+        logger.info("Successfully ingested %d Fact vectors into 'geometry_facts'.", len(facts))
 
     # Ingest Rules
     if rules:
-        logger.info("Embedding and uploading Rules into Qdrant...")
+        logger.info("Embedding and uploading Rules into Qdrant 'geometry_rules'...")
         documents = []
         points = []
 
@@ -196,8 +185,8 @@ def ingest_to_qdrant(facts: List[Dict[str, Any]], rules: List[Dict[str, Any]]) -
                 }
             ))
 
-        client.upsert(collection_name="omni_ips_rules", points=points)
-        logger.info("Successfully ingested %d Rule vectors.", len(rules))
+        client.upsert(collection_name="geometry_rules", points=points)
+        logger.info("Successfully ingested %d Rule vectors into 'geometry_rules'.", len(rules))
 
     logger.info("Qdrant synchronization complete!")
 
