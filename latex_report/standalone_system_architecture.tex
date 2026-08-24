@@ -1,4 +1,4 @@
-\documentclass[border=15pt,varwidth=32cm]{standalone}
+\documentclass[border=15pt,varwidth=34cm]{standalone}
 \usepackage[utf8]{inputenc}
 \usepackage[T5]{fontenc}
 \usepackage[vietnamese,english]{babel}
@@ -11,7 +11,7 @@
 \shorthandoff{"}
 
 \begin{tikzpicture}[
-    scale=0.98,
+    scale=1.0,
     transform shape,
     font=\sffamily,
     ui_box/.style={
@@ -42,6 +42,9 @@
         rectangle, rounded corners=8pt, draw=teal!90!black, fill=teal!22,
         line width=1.4pt, text centered, inner sep=10pt, blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-2pt, opacity=20}
     },
+    badge/.style={
+        fill=white, draw=gray!40, line width=0.6pt, rounded corners=3pt, inner sep=2.8pt, font=\scriptsize\bfseries
+    },
     arrow/.style={
         thick, ->, >=stealth, color=blue!90!black, line width=1.5pt
     },
@@ -51,75 +54,84 @@
 ]
 
     % ================= LEVEL 1: CLIENT / UI =================
-    \node [ui_box, text width=10.5cm] (ui) at (0, 6.2) {
+    \node [ui_box, text width=10.5cm] (ui) at (0, 6.6) {
         \textbf{\large \faDesktop\ Streamlit Interactive UI (Port 8501)}\\[3pt]
         {\small Natural Language Input, Interactive \LaTeX\ Proof Tree \& Stream}
     };
 
     % ================= LEVEL 2: API & KNOWLEDGE STORAGE =================
-    \node [db_box, text width=4.4cm] (neo4j) at (-8.0, 3.0) {
+    \node [db_box, text width=4.4cm] (neo4j) at (-8.0, 3.4) {
         \textbf{\large \faProjectDiagram\ Neo4j Graph DB}\\[3pt]
         {\small \textbf{1,128 Nodes, 1,532 Rel}}\\[2pt]
         {\footnotesize Formal Axioms \& Theorems}
     };
 
-    \node [api_box, text width=6.8cm] (gateway) at (0, 3.0) {
+    \node [api_box, text width=6.8cm] (gateway) at (0, 3.4) {
         \textbf{\large \faServer\ FastAPI Gateway \& Router}\\[3pt]
         {\small Query Normalization, Predicate Dispatcher}\\[2pt]
         {\footnotesize GraphRAG Theorem Matcher}
     };
 
-    \node [db_box, text width=4.4cm] (qdrant) at (8.0, 3.0) {
+    \node [db_box, text width=4.4cm] (qdrant) at (8.0, 3.4) {
         \textbf{\large \faCloud\ Qdrant Vector DB}\\[3pt]
         {\small \textbf{Cloud Vector Collections}}\\[2pt]
         {\footnotesize Dense Semantic Rule Index}
     };
 
     % ================= LEVEL 3: REASONING ENGINES =================
-    \node [process_box, text width=7.2cm] (dd) at (-4.8, 0.0) {
+    \node [process_box, text width=6.8cm] (dd) at (-4.2, 0.2) {
         \textbf{\large \faCogs\ \mbox{Forward Chaining (DD Engine)}}\\[3pt]
         {\small Unification, Modus Ponens \& Working Memory $\mathcal{WM}$}
     };
 
-    \node [db_box, text width=5.8cm] (ar) at (4.8, 0.0) {
+    \node [db_box, text width=5.6cm] (ar) at (4.2, 0.2) {
         \textbf{\large \faCalculator\ SymPy AR Engine}\\[3pt]
         {\small Angle Chasing \& Metric Linear Systems}
     };
 
     % ================= LEVEL 4: DECISION POINT =================
-    \node [decision_box, text width=4.5cm] (check) at (0, -2.6) {
-        \textbf{\large Target Goal $\mathcal{G}$}\\[3pt]\textbf{\large Satisfied?}
+    \node [decision_box, text width=4.6cm] (check) at (0, -2.6) {
+        \textbf{\large Target Goal $\mathcal{G}$}\\[3pt]\textbf{\large Achieved?}
     };
 
     % ================= LEVEL 5: OUTCOMES =================
-    \node [agent_box, text width=6.2cm] (aux) at (-5.2, -5.2) {
+    \node [agent_box, text width=6.6cm] (aux) at (-5.0, -5.6) {
         \textbf{\large \faRobot\ LLM Auxiliary Agent}\\[3pt]
         {\small Proof Gap Analysis \& Object Construction}
     };
 
-    \node [success_box, text width=6.2cm] (success) at (5.2, -5.2) {
+    \node [success_box, text width=6.6cm] (success) at (5.0, -5.6) {
         \textbf{\large \faCheckCircle\ Verified Proof Output}\\[3pt]
-        {\small Step-by-Step Rigorous Mathematical Trace}
+        {\small \mbox{Step-by-Step Rigorous Mathematical Trace}}
     };
 
-    % ================= CONNECTING ARROWS =================
-    \draw [biarrow] (ui.south) -- node[right=6pt, font=\bfseries\small, text=blue!90!black] {HTTP / REST \& SSE Stream} (gateway.north);
+    % ================= CONNECTING ARROWS WITH BADGES =================
+    % 1. UI <-> Gateway
+    \draw [biarrow] (ui.south) -- node[midway, badge, text=blue!90!black, draw=blue!40] {HTTP / REST \& SSE Stream} (gateway.north);
     
-    \draw [biarrow] (gateway.west) -- node[above=5pt, font=\bfseries\footnotesize, text=teal!85!black] {Cypher Query} (neo4j.east);
-    \draw [biarrow] (gateway.east) -- node[above=5pt, font=\bfseries\footnotesize, text=orange!95!black] {Vector Search} (qdrant.west);
+    % 2. Gateway <-> Neo4j & Qdrant
+    \draw [biarrow] (gateway.west) -- node[midway, badge, text=teal!85!black, draw=teal!40] {Cypher Query} (neo4j.east);
+    \draw [biarrow] (gateway.east) -- node[midway, badge, text=orange!95!black, draw=orange!40] {Vector Search} (qdrant.west);
 
-    \draw [arrow] (gateway.south) -- ++(0, -0.6) -| node[near end, left=4pt, font=\bfseries\footnotesize, text=blue!90!black] {Parsed $\mathcal{F}_0, \mathcal{G}$} (dd.north);
-    \draw [biarrow, color=orange!90!black] (dd.east) -- node[above=5pt, font=\bfseries\footnotesize, text=orange!95!black] {Equation Exchange} (ar.west);
+    % 3. Gateway -> DD Engine
+    \draw [arrow] (gateway.south) -- ++(0, -0.6) -| node[pos=0.7, badge, text=blue!90!black, draw=blue!40] {Parsed $\mathcal{F}_0, \mathcal{G}$} (dd.north);
     
+    % 4. DD Engine <-> SymPy AR
+    \draw [biarrow, color=orange!90!black] (dd.east) -- node[midway, badge, text=orange!95!black, draw=orange!40] {Equation Exchange} (ar.west);
+    
+    % 5. Engines -> Decision Diamond
     \draw [arrow] (dd.south) |- (check.155);
     \draw [arrow, color=orange!90!black] (ar.south) |- (check.25);
 
-    \draw [arrow] (check.west) -| node[near start, above=3pt, font=\bfseries\small, text=red!85!black] {NO (Saturation / Proof Gap)} (aux.north);
-    \draw [arrow] (check.east) -| node[near start, above=3pt, font=\bfseries\small, text=teal!85!black] {YES (Proof Found)} (success.north);
+    % 6. Decision Diamond -> Outcomes (NO from West, YES from East)
+    \draw [arrow] (check.west) -| node[pos=0.35, badge, text=red!85!black, draw=red!40] {NO (Saturation / Proof Gap)} (aux.north);
+    \draw [arrow] (check.east) -| node[pos=0.35, badge, text=teal!85!black, draw=teal!40] {YES (Proof Found)} (success.north);
 
-    \draw [arrow, dashed, color=purple!85!black] (aux.west) -- ++(-1.4, 0) |- node[near start, left=4pt, font=\bfseries\footnotesize, text=purple!90!black, align=right] {Inject Auxiliary\\Objects into $\mathcal{WM}$} (dd.west);
+    % 7. Feedback Loop: Auxiliary -> DD Engine
+    \draw [arrow, dashed, color=purple!85!black] (aux.west) -- ++(-1.6, 0) |- node[pos=0.25, badge, text=purple!90!black, draw=purple!40, align=center] {Inject Auxiliary\\Objects into $\mathcal{WM}$} (dd.west);
 
-    \draw [arrow, color=teal!85!black] (success.east) -- ++(1.4, 0) |- node[near start, right=4pt, font=\bfseries\footnotesize, text=teal!90!black, align=left] {Return Formal\\Proof Trace} (ui.east);
+    % 8. Output Loop: Success -> UI
+    \draw [arrow, color=teal!85!black] (success.east) -- ++(1.6, 0) |- node[pos=0.25, badge, text=teal!90!black, draw=teal!40, align=center] {Return Formal\\Proof Trace} (ui.east);
 
 \end{tikzpicture}
 
