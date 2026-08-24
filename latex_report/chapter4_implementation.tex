@@ -154,8 +154,8 @@ Hệ thống kích hoạt chuỗi định lý về các tứ giác nội tiếp 
 \centering
 \caption{Bảng kết quả đánh giá thực nghiệm 15 bài toán trên Bộ kiểm chuẩn IMO Benchmark.}
 \label{tab:benchmark_results}
-\renewcommand{\arraystretch}{1.2}
-\small
+\renewcommand{\arraystretch}{1.25}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{clllcc}
 \toprule
 \textbf{STT} & \textbf{Cấp độ} & \textbf{Tên bài toán / Định lý} & \textbf{Vị từ Mục tiêu (Goal)} & \textbf{Thời gian} & \textbf{Kết quả} \\
@@ -178,7 +178,8 @@ Hệ thống kích hoạt chuỗi định lý về các tứ giác nội tiếp 
 \midrule
 \multicolumn{4}{l}{\textbf{TỔNG KẾT TỶ LỆ CHỨNG MINH THÀNH CÔNG:}} & \multicolumn{2}{c}{\textbf{15/15 (100.0\%) \faTrophy}} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Kết quả thực nghiệm trong Bảng~\ref{tab:benchmark_results} khẳng định hệ thống đạt độ chính xác tuyệt đối $100\%$ trên toàn bộ 15 bài toán kiểm chuẩn, với thời gian phản hồi trung bình dưới 10 giây mỗi bài toán.
