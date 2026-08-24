@@ -10,6 +10,8 @@ Supports:
 """
 
 import os
+import re
+import json
 import time
 import requests
 import streamlit as st
@@ -69,10 +71,12 @@ def solve_query(query: str, use_aux_agent: bool = True) -> dict:
 
 
 def clean_latex(text: str) -> str:
-    """Replace common LLM LaTeX delimiters with standard Streamlit dollar signs."""
+    """Replace common LLM LaTeX delimiters with standard Streamlit dollar signs and strip reasoning tags."""
     if not text:
         return text
-    return text.replace("\\[", "$$").replace("\\]", "$$").replace("\\(", "$").replace("\\)", "$")
+    # Strip <think>...</think> reasoning blocks if present
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    return text.replace("\\[", "$$").replace("\\]", "$$").replace("\\(", "$").replace("\\)", "$").strip()
 
 
 def format_latex_stream(stream):
@@ -414,7 +418,7 @@ for msg in st.session_state.messages:
                 # LLM Explanation
                 st.markdown("---")
                 if explanation:
-                    st.markdown(clean_latex(explanation))
+                    st.markdown(clean_latex(explanation), unsafe_allow_html=True)
                 else:
                     st.info("No explanation generated.")
 
@@ -509,7 +513,7 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
             st.markdown("---")
             explanation_str = ""
             trace_data = result.get("execution_trace", [])
-            if trace_data or aux_constructions:
+            if trace_data or aux_constructions or goal_reached:
                 explanation_str = st.write_stream(
                     format_latex_stream(
                         explain_proof_stream(user_msg, trace_data, goal_reached, aux_constructions)

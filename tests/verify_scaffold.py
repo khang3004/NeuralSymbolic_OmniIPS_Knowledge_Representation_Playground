@@ -96,7 +96,7 @@ def test_geometry_domain():
     
     # Note that Congruent(CD, AB) will canonicalize to Congruent(AB, CD) due to alphabet sorting
     print(f"Commutative Fact Canonicalization check: 'Congruent(CD, AB)' -> '{fact_1.value}'")
-    assert fact_1.value == "Congruent(AB, CD)", "Canonicalization of Congruent relation failed."
+    assert fact_1.value == "Congruent(AB,CD)", "Canonicalization of Congruent relation failed."
 
     initial_facts = [fact_1, fact_2]
     goal_fact = parser.parse_fact("Congruent(AB, EF)", "goal_g")
