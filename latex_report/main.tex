@@ -52,7 +52,7 @@
 \renewcommand{\footrulewidth}{0pt}
 
 % ==============================================================================
-% TIKZ SETUP CHO SƠ ĐỒ KIẾN TRÚC
+% TIKZ SETUP CHO SƠ ĐỒ KIẾN TRÚC VÀ TRANG BÌA
 % ==============================================================================
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, shadows}
 \tikzset{
@@ -113,14 +113,173 @@
 % ==============================================================================
 \begin{document}
 
-% 1. Trang bìa chính & Trang áp bìa
-\input{cover}
+% ------------------------------------------------------------------------------
+% 1. TRANG BÌA CHÍNH VÀ TRANG ÁP BÌA TÍCH HỢP TRỰC TIẾP VỚI TIKZ SACRED GEOMETRY
+% ------------------------------------------------------------------------------
+\begin{titlepage}
+% --- TRANG BÌA NGOÀI (BÌA CHÍNH) ---
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+    % Khung đôi trang trọng cân đối đối xứng
+    \draw[line width=2.5pt, color=blue!85!black] 
+        ($(current page.north west) + (2.0cm,-2.0cm)$) rectangle 
+        ($(current page.south east) + (-2.0cm,2.0cm)$);
+    \draw[line width=0.8pt, color=blue!85!black] 
+        ($(current page.north west) + (2.15cm,-2.15cm)$) rectangle 
+        ($(current page.south east) + (-2.15cm,2.15cm)$);
+    
+    % Hoa văn 4 góc trang trọng
+    \foreach \x/\y/\a in {2.15/-2.15/0, -2.15/-2.15/90, -2.15/2.15/180, 2.15/2.15/270} {
+        \begin{scope}[shift={($(current page.north west) + (\x,\y)$)}, rotate=\a]
+            \draw[line width=0.9pt, color=blue!85!black] (0,0) -- (1.0,0);
+            \draw[line width=0.9pt, color=blue!85!black] (0,0) -- (0,-1.0);
+            \draw[line width=0.5pt, color=blue!85!black] (0.2,-0.2) -- (0.8,-0.2);
+            \draw[line width=0.5pt, color=blue!85!black] (0.2,-0.2) -- (0.2,-0.8);
+            \draw[fill=blue!85!black] (0.3,-0.3) circle (2.0pt);
+        \end{scope}
+    }
+\end{tikzpicture}
 
-% 2. Lời cảm ơn & Tóm tắt tiểu luận
+\begin{center}
+    \vspace*{-0.6cm}
+    {\large \textbf{ĐẠI HỌC QUỐC GIA TP. HỒ CHÍ MINH}}\\[0.2cm]
+    {\large \textbf{TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN}}\\[0.2cm]
+    {\large \textbf{KHOA CÔNG NGHỆ THÔNG TIN}}\\[0.4cm]
+
+    % --- TIKZ NEURO-SYMBOLIC GEOMETRY SACRED EMBLEM ---
+    \begin{tikzpicture}[scale=0.82, transform shape]
+        % Background subtle gradient aura
+        \shade[inner color=blue!10, outer color=white] (0,0) circle (3.3cm);
+        
+        % Outer Circumcircle & Incircle
+        \draw[line width=1.5pt, color=blue!85!black, dashed] (0,0) circle (2.7cm);
+        \draw[line width=1.0pt, color=teal!75!black] (0,-0.32) circle (1.26cm);
+        
+        % 9-Point Feuerbach Circle (Subtle Gold)
+        \draw[line width=0.9pt, color=orange!80!black, dashdotted] (0,0.38) circle (1.35cm);
+
+        % Key Triangle Vertices: A (Top), B (Bottom Left), C (Bottom Right)
+        \coordinate (A) at (90:2.7);
+        \coordinate (B) at (210:2.7);
+        \coordinate (C) at (330:2.7);
+        
+        % Triangle Sides
+        \draw[line width=2.0pt, color=blue!90!black] (A) -- (B) -- (C) -- cycle;
+
+        % Midpoints of Sides
+        \coordinate (Mab) at ($(A)!0.5!(B)$);
+        \coordinate (Mbc) at ($(B)!0.5!(C)$);
+        \coordinate (Mca) at ($(C)!0.5!(A)$);
+        
+        % Medians & Centroid G
+        \draw[line width=0.8pt, color=purple!70!black, dotted] (A) -- (Mbc);
+        \draw[line width=0.8pt, color=purple!70!black, dotted] (B) -- (Mca);
+        \draw[line width=0.8pt, color=purple!70!black, dotted] (C) -- (Mab);
+        \coordinate (G) at (0,0); % Centroid for equilateral base
+
+        % Altitudes & Orthocenter H
+        \draw[line width=0.8pt, color=teal!80!black, densely dashed] (A) -- (0,-1.35);
+        \draw[line width=0.8pt, color=teal!80!black, densely dashed] (B) -- (1.17,0.67);
+        \draw[line width=0.8pt, color=teal!80!black, densely dashed] (C) -- (-1.17,0.67);
+
+        % External Tangent Extensions (Representing Auxiliary Constructions)
+        \coordinate (T1) at ($(A) + (-1.6, 0.4)$);
+        \coordinate (T2) at ($(A) + (1.6, 0.4)$);
+        \draw[line width=1.0pt, color=red!80!black] (T1) -- (T2);
+        
+        % Euler Line (Gold Axis)
+        \draw[line width=1.3pt, color=orange!95!black] (0,1.9) -- (0,-2.3);
+
+        % Neural Network & Knowledge Graph Synapses (Glowing Graph Edges)
+        \foreach \u/\v in {A/Mab, A/Mca, B/Mbc, B/Mab, C/Mca, C/Mbc, Mab/Mbc, Mbc/Mca, Mca/Mab} {
+            \draw[line width=0.6pt, color=cyan!85!black, opacity=0.85] (\u) -- (\v);
+        }
+
+        % Glowing Knowledge Graph Nodes at Vertices and Centers
+        \foreach \pt/\col in {A/{blue!90!black}, B/{blue!90!black}, C/{blue!90!black}, Mab/{teal!80!black}, Mbc/{teal!80!black}, Mca/{teal!80!black}, G/{orange!90!black}} {
+            \fill[\col!25] (\pt) circle (7.0pt);
+            \fill[\col] (\pt) circle (3.6pt);
+            \draw[line width=0.7pt, color=white] (\pt) circle (3.6pt);
+        }
+
+        % Mathematical & Logic Symbols orbiting the emblem
+        \node[font=\bfseries\small, color=blue!85!black] at (90:3.1) {$\mathbf{A}$};
+        \node[font=\bfseries\small, color=blue!85!black] at (210:3.1) {$\mathbf{B}$};
+        \node[font=\bfseries\small, color=blue!85!black] at (330:3.1) {$\mathbf{C}$};
+        
+        \node[font=\footnotesize\itshape\bfseries, color=purple!85!black, fill=white, inner sep=2pt, rounded corners=3pt, draw=purple!40] at (0,-0.65) {$\mathcal{WM} \vdash \mathcal{G}$};
+        \node[font=\scriptsize\bfseries, color=orange!95!black, fill=white, inner sep=1.5pt, rounded corners=2pt, draw=orange!40] at (1.55,1.75) {$\text{SymPy AR}$};
+        \node[font=\scriptsize\bfseries, color=teal!95!black, fill=white, inner sep=1.5pt, rounded corners=2pt, draw=teal!40] at (-1.65,-1.55) {$\text{GraphRAG}$};
+        \node[font=\scriptsize\bfseries, color=blue!85!black, fill=white, inner sep=1.5pt, rounded corners=2pt, draw=blue!40] at (1.65,-1.55) {$\text{Neo4j} + \text{Qdrant}$};
+    \end{tikzpicture}
+    \\[0.35cm]
+
+    {\large \textbf{TIỂU LUẬN MÔN HỌC}}\\[0.2cm]
+    {\LARGE \textbf{BIỂU DIỄN TRI THỨC VÀ ỨNG DỤNG}}\\[0.6cm]
+
+    {\Large \textbf{ĐỀ TÀI:}}\\[0.25cm]
+    {\huge \bfseries \color{blue!85!black} CỖ MÁY SUY DIỄN HÌNH HỌC PHẲNG TỰ ĐỘNG THEO TIẾP CẬN NEURO-SYMBOLIC VÀ ĐỒ THỊ TRI THỨC}\\[0.3cm]
+    {\large \textit{(Nghiên cứu, Thiết kế và Hiện thực hóa hệ thống giải toán hình học phẳng lấy cảm hứng từ AlphaGeometry)}}\\[1.5cm]
+
+    \begin{center}
+    \begin{tabular}{ll}
+        \textbf{Học viên thực hiện:} & \textbf{NGUYỄN HOÀNG KHANG} \\
+        \textbf{Mã số học viên:}     & \textbf{25C0103580} \\
+        \textbf{Chuyên ngành:}       & \textbf{Khoa học Dữ liệu (KHDL)} \\
+        \textbf{Giảng viên hướng dẫn:} & \textbf{PGS.TS. ĐỖ VĂN NHƠN} \\
+    \end{tabular}
+    \end{center}
+
+    \vfill
+    {\large \textbf{TP. HỒ CHÍ MINH -- THÁNG 08/2026}}
+\end{center}
+
+\newpage
+% --- TRANG ÁP BÌA (BÌA TRONG) ---
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+    \draw[line width=1.5pt, color=gray!70!black] 
+        ($(current page.north west) + (2.0cm,-2.0cm)$) rectangle 
+        ($(current page.south east) + (-2.0cm,2.0cm)$);
+\end{tikzpicture}
+
+\begin{center}
+    \vspace*{-0.6cm}
+    {\large \textbf{ĐẠI HỌC QUỐC GIA TP. HỒ CHÍ MINH}}\\[0.2cm]
+    {\large \textbf{TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN}}\\[0.2cm]
+    {\large \textbf{KHOA CÔNG NGHỆ THÔNG TIN}}\\[1.0cm]
+
+    {\large \textbf{BÁO CÁO TIỂU LUẬN CAO HỌC}}\\[0.25cm]
+    {\LARGE \textbf{BIỂU DIỄN TRI THỨC VÀ ỨNG DỤNG}}\\[0.8cm]
+
+    {\Large \textbf{ĐỀ TÀI:}}\\[0.25cm]
+    {\huge \bfseries CỖ MÁY SUY DIỄN HÌNH HỌC PHẲNG TỰ ĐỘNG THEO TIẾP CẬN NEURO-SYMBOLIC VÀ ĐỒ THỊ TRI THỨC}\\[1.5cm]
+
+    \begin{center}
+    \begin{tabular}{ll}
+        \textbf{Học viên thực hiện:} & \textbf{Nguyễn Hoàng Khang} \\
+        \textbf{Mã số học viên:}     & \textbf{25C0103580} \\
+        \textbf{Lớp:}                & Cao học Khoa học Dữ liệu Khóa 2025 \\
+        \textbf{Chuyên ngành:}       & Khoa học Dữ liệu (KHDL) \\
+        \textbf{Giảng viên phụ trách:} & \textbf{PGS.TS. Đỗ Văn Nhơn} \\
+        \textbf{Đơn vị đào tạo:}     & Trường ĐH Khoa học Tự nhiên, ĐHQG-HCM \\
+    \end{tabular}
+    \end{center}
+
+    \vfill
+    {\large \textbf{TP. HỒ CHÍ MINH -- THÁNG 08/2026}}
+\end{center}
+\end{titlepage}
+
+% ------------------------------------------------------------------------------
+% 2. LỜI CẢM ƠN VÀ TÓM TẮT TIỂU LUẬN
+% ------------------------------------------------------------------------------
 \pagenumbering{roman}
 \input{abstract}
 
-% 3. Mục lục, Danh mục từ viết tắt, Danh mục hình & bảng
+% ------------------------------------------------------------------------------
+% 3. MỤC LỤC, DANH MỤC TỪ VIẾT TẮT, DANH MỤC HÌNH & BẢNG
+% ------------------------------------------------------------------------------
 \newpage
 \tableofcontents
 \newpage
@@ -131,7 +290,9 @@
 \listoftables
 \newpage
 
-% 4. Nội dung chính: Đánh số trang từ 1 (Phần Mở đầu)
+% ------------------------------------------------------------------------------
+% 4. NỘI DUNG CHÍNH (ĐÁNH SỐ TRANG ARABIC BẮT ĐẦU TỪ TRANG 1)
+% ------------------------------------------------------------------------------
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
@@ -142,12 +303,16 @@
 \input{chapter4_implementation}
 \input{chapter5_conclusion}
 
-% 5. Danh mục tài liệu tham khảo
+% ------------------------------------------------------------------------------
+% 5. DANH MỤC TÀI LIỆU THAM KHẢO
+% ------------------------------------------------------------------------------
 \newpage
 \bibliographystyle{plain}
 \bibliography{references}
 
-% 6. Phụ lục
+% ------------------------------------------------------------------------------
+% 6. PHỤ LỤC
+% ------------------------------------------------------------------------------
 \newpage
 \input{appendix}
 
