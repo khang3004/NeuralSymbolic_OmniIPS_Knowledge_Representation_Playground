@@ -1,23 +1,46 @@
-\section{Introduction}
-\label{sec:intro}
+% ==============================================================================
+% PHẦN MỞ ĐẦU (INTRODUCTION)
+% ==============================================================================
 
-In recent years, connectionist artificial intelligence, led by Large Language Models (LLMs), has achieved human-level performance in creative writing, code generation, and multi-turn dialogue. Despite these breakthroughs, LLMs struggle to solve formal reasoning tasks that require strict deductive logic, mathematical rigor, and exact symbol manipulation~\cite{creswell2018selection}. Typical failures include hallucinating invalid equations, applying non-applicable theorems, and creating circular dependencies in proofs. 
+\chapter*{PHẦN MỞ ĐẦU}
+\addcontentsline{toc}{chapter}{Phần mở đầu}
 
-These deficiencies arise because LLMs are fundamentally probabilistic sequence predictors, optimizing the likelihood of subsequent tokens based on high-dimensional associations:
-\begin{equation}
-    P(T_n \mid T_{1}, T_{2}, \dots, T_{n-1})
-\end{equation}
-This probabilistic paradigm is inherently mismatched with the algebraic and deductive structures of formal logic, where truth values are binary, deterministic, and highly sensitive to syntax. For instance, in Euclidean geometry, a single misplaced parenthesis in a predicate like \texttt{RightTriangle(A,B,C)} vs. \texttt{RightTriangle(ABC,A)} disrupts the logical unification in propositional solving. Similarly, in chemistry, balancing stoichiometric equations like $2\text{Na} + 2\text{H}_2\text{O} \to 2\text{NaOH} + \text{H}_2$ requires exact integer conservation, which LLMs routinely violate when performing multi-step reaction reasoning.
-
-To overcome these weaknesses, we present \textbf{Omni-IPS} (\textit{Neuro-Symbolic \& GraphRAG Multi-Domain Intelligent Problem Solver}). Omni-IPS combines the strengths of statistical language modeling (for natural language parsing and human-friendly explanation streaming) and symbolic computer science (for deterministic theorem proving and exact database mapping). 
-
-\subsection{Core Contributions}
-Our work introduces three primary contributions to the field of hybrid artificial intelligence:
+\section*{1. Tính cấp thiết của đề tài}
+Biểu diễn tri thức và suy luận tự động (Knowledge Representation and Automated Reasoning) là một trong những trụ cột nền tảng nhất của ngành Trí tuệ Nhân tạo (AI) kể từ khi ra đời. Trong số các miền tri thức khoa học, \textbf{Hình học phẳng Euclid (Euclidean Plane Geometry)} luôn được coi là miền đất thử thách khắc nghiệt nhất cho các hệ thống máy tính bởi sự kết hợp đa tầng giữa:
 \begin{itemize}
-    \item \textbf{A Dual-Database Neuro-Symbolic Router}: We construct an ingestion framework using \textbf{Neo4j} (as a rigid graph store for rules and properties) and \textbf{Qdrant} (as a semantic vector index for fuzzy match resolving). This enables natural language queries to be robustly parsed and aligned to concrete database entities even under variable phrasing.
-    \item \textbf{Nested Balanced-Parenthesis Predicate Parsing}: We implement a linear-time $O(N)$ syntax parser that handles nested arguments (e.g., \texttt{RightAngle(Angle(BAC))}) and enforces geometric commutativity (e.g., automatically sorting and standardizing commutative predicates like \texttt{Parallel(AB,CD)} into \texttt{Parallel(AB,CD)}).
-    \item \textbf{Domain-Agnostic Propositional Reasoning Core}: We develop high-efficiency Forward Chaining and Backward Chaining inference engines that run locally within a closed-world memory. These engines execute purely symbolic logic, mathematically ensuring that any generated step-by-step trace is logically sound and provably correct.
+    \item \textbf{Logic vị từ hình thức nghiêm ngặt}: Mọi bước chứng minh đều phải tuân theo chuỗi suy diễn tiến/lùi từ các tiên đề (Axioms) và định lý (Theorems) đã được công nhận.
+    \item \textbf{Tính toán đại số liên tục}: Đòi hỏi xử lý chính xác quan hệ số đo góc, độ dài đoạn thẳng, tỉ số đồng dạng và phương trình đa thức.
+    \item \textbf{Trực giác không gian và sáng tạo}: Rất nhiều bài toán hình học kinh điển không thể giải quyết bằng các đối tượng ban đầu mà bắt buộc phải \textit{"kẻ thêm hình phụ"} (Auxiliary Construction) -- một kỹ năng vốn gắn liền với tư duy sáng tạo của con người.
 \end{itemize}
 
-\subsection{Organization of the Report}
-The rest of this document is organized as follows. Section~\ref{sec:pipelines} details the data pipelines and Wikipedia/Wikidata ingestion strategies. Section~\ref{sec:knowledge_graph} explores our Neo4j graph model, relational schemas, and commutative property rules. Section~\ref{sec:rag_router} introduces the hybrid Qdrant vector-exact mapping router and the nested parenthesis parser. Section~\ref{sec:reasoning_engine} formulates the symbolic Forward and Backward Chaining algorithms mathematically with detailed pseudo-code. Section~\ref{sec:system_integration} specifies our FastAPI backend API routes, streaming architectures, and Streamlit frontend components. Section~\ref{sec:evaluation} displays the postman API testing schemas, verification examples, and quantitative results. Finally, Section~\ref{sec:conclusion} concludes the paper and discusses future work.
+Trong những năm gần đây, sự bùng nổ của các Mô hình Ngôn ngữ Lớn (LLMs) như GPT-4 hay Claude đã tạo nên bước ngoặt lớn về khả năng đọc hiểu ngôn ngữ tự nhiên. Tuy nhiên, khi đối mặt với bài toán chứng minh hình học chặt chẽ, các mô hình sinh xác suất thuần túy bộc lộ rõ những hạn chế chí mạng: hiện tượng ảo giác (hallucination), ngụy biện logic (logical fallacy) và không có cơ chế toán học nào đảm bảo tính đúng đắn của chuỗi suy luận.
+
+Vào đầu năm 2024, công trình đột phá \textbf{AlphaGeometry} của Google DeepMind \cite{trinh2024alphageometry} được công bố trên tạp chí \textit{Nature}, chứng minh khả năng giải toán hình học đạt đẳng cấp huy chương vàng Olympic Toán học Quốc tế (IMO). Bí quyết thành công của AlphaGeometry nằm ở việc kết hợp tinh tế giữa hai trường phái: mô hình thần kinh (Neural Language Model) đóng vai trò định hướng sáng tạo kẻ đường phụ, và cỗ máy suy diễn ký hiệu (Symbolic Deduction Engine + Algebraic Reasoning) đóng vai trò là "trọng tài" suy luận hình thức bảo đảm tính chính xác $100\%$.
+
+Dưới sự giảng dạy và truyền cảm hứng từ \textbf{GS. Đỗ Văn Nhơn} trong môn học \textit{Biểu diễn tri thức và ứng dụng}, đề tài \textbf{"Nghiên cứu và Hiện thực hóa Cỗ máy Suy diễn Hình học Phẳng Tự động theo Tiếp cận Neuro-Symbolic và Đồ thị Tri thức"} được lựa chọn nhằm vận dụng sâu sắc các lý thuyết biểu diễn tri thức kinh điển (Mạng ngữ nghĩa, Đồ thị tri thức, Logic vị từ, Suy diễn tiến) kết hợp với công nghệ hiện đại (GraphRAG, Vector Database, LLM JSON Schema Routing) để kiến tạo một hệ thống giải toán hình học mạnh mẽ, đáng tin cậy và có tính sư phạm cao.
+
+\section*{2. Mục tiêu nghiên cứu}
+Đề tài hướng tới các mục tiêu cốt lõi sau:
+\begin{enumerate}
+    \item \textbf{Xây dựng Ngôn ngữ Biểu diễn Vị từ Hình học chuẩn hóa}: Thiết lập hệ thống vị từ bậc nhất biểu diễn trọn vẹn các thực thể (Điểm, Đoạn thẳng, Góc, Tam giác, Tứ giác, Đường tròn) và các quan hệ hình học (Song song, Vuông góc, Đồng dạng, Tiếp tuyến, Tứ giác nội tiếp, Thẳng hàng, Đồng quy).
+    \item \textbf{Thiết kế Đồ thị Tri thức Hình học (Knowledge Graph on Neo4j \& Qdrant)}: Xây dựng cơ sở tri thức đồ thị quy mô lớn lưu trữ hệ thống tiên đề Euclid và định lý FormalGeo; đồng bộ hóa với cơ sở dữ liệu vector Qdrant để thực hiện truy xuất định lý dựa trên ngữ nghĩa (Dense Theorem Retrieval).
+    \item \textbf{Hiện thực hóa Động cơ Suy diễn Ký hiệu \& Đại số (Deduction Engine + SymPy AR)}: Xây dựng thuật toán suy diễn tiến (Forward Chaining) kết hợp hợp giải vị từ (Unification) và đại số hóa giải hệ phương trình góc/đoạn thẳng tự động.
+    \item \textbf{Phát triển Tác tử Bổ trợ Hình phụ Neuro-Symbolic (Auxiliary Agent)}: Tích hợp LLM để tự động phân tích bế tắc và đề xuất các điểm phụ, đường phụ, tâm/đường tròn ngoại tiếp vượt qua khoảng trống chứng minh.
+    \item \textbf{Xây dựng Giao diện Sư phạm Trực quan và Đánh giá Thực nghiệm}: Cung cấp giao diện Streamlit giải toán tương tác, xuất lời giải từng bước bằng tiếng Việt kèm công thức LaTeX; đánh giá chất lượng trên bộ kiểm chuẩn 15 bài toán hình học IMO và kỳ thi học sinh giỏi.
+\end{enumerate}
+
+\section*{3. Đối tượng và Phạm vi nghiên cứu}
+\begin{itemize}
+    \item \textbf{Đối tượng nghiên cứu}: Các phương pháp biểu diễn tri thức hình học phẳng, đồ thị tri thức (Knowledge Graph), kỹ thuật truy xuất tăng cường đồ thị (GraphRAG), thuật toán suy diễn hình thức (Forward Chaining), động cơ đại số máy tính (SymPy) và mô hình ngôn ngữ lớn (LLM).
+    \item \textbf{Phạm vi ứng dụng}: Miền hình học phẳng Euclid trong chương trình Trung học Cơ sở (lớp 8, 9), Trung học Phổ thông (luyện thi vào 10 chuyên) và các bài toán hình học Olympic (IMO / VMO) từ mức độ cơ bản đến nâng cao.
+\end{itemize}
+
+\section*{4. Cấu trúc của Báo cáo Tiểu luận}
+Báo cáo tiểu luận được tổ chức thành 5 chương với nội dung chi tiết như sau:
+\begin{itemize}
+    \item \textbf{Chương 1: Tổng quan và Cơ sở Lý thuyết}: Trình bày lịch sử biểu diễn tri thức, các phương pháp chứng minh hình học tự động, kiến trúc đột phá AlphaGeometry và kho ngữ liệu FormalGeo.
+    \item \textbf{Chương 2: Cơ chế Biểu diễn Tri thức Hình học và Đồ thị Tri thức}: Chi tiết hóa ngôn ngữ vị từ, mô hình đồ thị tri thức trên Neo4j (1.128 nút, 1.532 quan hệ), cơ sở dữ liệu vector Qdrant và bộ định tuyến Neuro-Symbolic GraphRAG.
+    \item \textbf{Chương 3: Kiến trúc Suy diễn Neuro-Symbolic, Đại số hóa và Dựng hình phụ}: Phân tích thuật toán suy diễn tiến, cơ chế đại số hóa SymPy AR và tác tử sinh hình phụ giải quyết bế tắc.
+    \item \textbf{Chương 4: Hiện thực hóa Hệ thống, Giao diện Sư phạm và Thực nghiệm Đánh giá}: Giới thiệu kiến trúc Microservices Docker, giao diện Streamlit sư phạm và kết quả kiểm thử trên 15 bài toán IMO Benchmark cùng các đề thi tuyển sinh thực tế.
+    \item \textbf{Chương 5: Kết luận và Hướng phát triển}: Đánh giá tổng kết các kết quả đạt được, đóng góp của đề tài và định hướng mở rộng trong tương lai.
+\end{itemize}

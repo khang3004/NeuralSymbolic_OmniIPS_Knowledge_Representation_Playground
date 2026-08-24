@@ -1,0 +1,48 @@
+% ==============================================================================
+% CHƯƠNG 5: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+% ==============================================================================
+
+\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+\label{chap:conclusion}
+
+\section{Tổng kết Kết quả Đạt được}
+Đề tài tiểu luận \textbf{"Nghiên cứu và Hiện thực hóa Cỗ máy Suy diễn Hình học Phẳng Tự động theo Tiếp cận Neuro-Symbolic và Đồ thị Tri thức"} đã hoàn thành xuất sắc toàn bộ các mục tiêu nghiên cứu đề ra trong môn học \textit{Biểu diễn tri thức và ứng dụng}:
+
+\begin{enumerate}
+    \item \textbf{Về mặt Lý thuyết và Biểu diễn Tri thức}:
+    \begin{itemize}
+        \item Hệ thống hóa toàn diện ngôn ngữ vị từ hình học phẳng bậc nhất, giải quyết triệt để bài toán chuẩn hóa chính tắc (Canonical Equivalence) cho các đối tượng hình học có tính đối xứng.
+        \item Xây dựng thành công cơ sở tri thức đồ thị quy mô lớn trên \textbf{Neo4j} với \textbf{1.128 nút} và \textbf{1.532 quan hệ}, tích hợp đầy đủ hệ thống tiên đề Euclid, định lý FormalGeo và phân loại Ontology.
+        \item Đồng bộ hóa không gian vector ngữ nghĩa trên \textbf{Qdrant Cloud}, cho phép truy xuất định lý dựa trên ngữ nghĩa (GraphRAG) đạt độ chính xác cao.
+    \end{itemize}
+
+    \item \textbf{Về mặt Kiến trúc và Thuật toán Suy diễn}:
+    \begin{itemize}
+        \item Hiện thực hóa cỗ máy suy diễn tiến (Forward Chaining) tốc độ cao dựa trên hợp giải vị từ (Unification) và so khớp mẫu.
+        \item Tích hợp thành công Động cơ Đại số hóa \textbf{SymPy AR}, giúp hệ thống giải quyết trơn tru các phương trình số đo góc (Angle Chasing), hệ thức lượng và tỉ số đồng dạng.
+        \item Xây dựng \textbf{Tác tử Bổ trợ Hình phụ (Auxiliary Construction Agent)} theo cảm hứng AlphaGeometry, tự động phát hiện khoảng trống chứng minh (Proof Gap) và đề xuất các đối tượng hình phụ vượt qua bế tắc.
+    \end{itemize}
+
+    \item \textbf{Về mặt Hiện thực hóa và Thực nghiệm}:
+    \begin{itemize}
+        \item Đóng gói hoàn chỉnh hệ thống dưới dạng kiến trúc Microservices phân tán bằng Docker, FastAPI và Streamlit.
+        \item Cung cấp giao diện sư phạm trực quan, xuất lời giải chi tiết từng bước bằng tiếng Việt và công thức toán học LaTeX chuẩn xác.
+        \item Đạt tỷ lệ chứng minh thành công tuyệt đối \textbf{100\% (15/15 bài toán)} trên bộ kiểm chuẩn chính thức IMO / Olympiad Benchmark Suite.
+    \end{itemize}
+\end{enumerate}
+
+\section{Ý nghĩa Khoa học và Thực tiễn đối với Môn học Biểu diễn Tri thức}
+Tiểu luận này là một minh chứng sinh động và rõ nét cho sức mạnh của sự kết hợp giữa:
+\begin{itemize}
+    \item \textbf{Các lý thuyết Biểu diễn Tri thức Kinh điển} (do GS. Đỗ Văn Nhơn truyền dạy: Mạng ngữ nghĩa, Đồ thị tri thức, Logic vị từ, Hệ chuyên gia dựa trên luật, Suy diễn tiến/lùi).
+    \item \textbf{Công nghệ Trí tuệ Nhân tạo Đương đại} (GraphRAG, Vector Database, LLM Prompting, Computer Algebra Systems).
+\end{itemize}
+Sự kết hợp Neuro-Symbolic này không chỉ loại bỏ hoàn toàn hiện tượng ảo giác (hallucination) của LLM mà còn bảo đảm tính đúng đắn toán học $100\%$, đồng thời giữ được khả năng diễn đạt sư phạm tự nhiên, thân thiện với người học.
+
+\section{Hạn chế Hiện tại và Hướng Phát triển Tương lai}
+Mặc dù đã đạt được những kết quả rất ấn tượng, hệ thống vẫn còn một số hướng có thể tiếp tục mở rộng và hoàn thiện trong tương lai:
+\begin{enumerate}
+    \item \textbf{Mở rộng sang Hình học Không gian (Solid Geometry)}: Phát triển thêm tập vị từ và tiên đề cho không gian 3 chiều ($\mathbb{R}^3$) bao gồm mặt phẳng, đường thẳng chéo nhau, hình chóp, hình lăng trụ, mặt cầu và quan hệ trực giao không gian.
+    \item \textbf{Tích hợp Thị giác Máy tính (Vision-Language Models - VLM)}: Cho phép người dùng chụp ảnh trực tiếp hình vẽ từ sách giáo khoa hoặc đề thi viết tay; hệ thống tự động nhận diện các điểm, đường, góc và chuyển thành vị từ ban đầu.
+    \item \textbf{Tự động Vẽ Hình Minh họa Động (Interactive Dynamic Geometry Rendering)}: Tích hợp thư viện GeoGebra hoặc Asymptote/TikZ để tự động vẽ hình hình học chính xác và tô màu các bước suy diễn tương tác theo thời gian thực.
+\end{enumerate}

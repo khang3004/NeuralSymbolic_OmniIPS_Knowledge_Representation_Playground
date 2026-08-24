@@ -1,0 +1,78 @@
+% ==============================================================================
+% CHƯƠNG 1: TỔNG QUAN VÀ CƠ SỞ LÝ THUYẾT
+% ==============================================================================
+
+\chapter{TỔNG QUAN VÀ CƠ SỞ LÝ THUYẾT}
+\label{chap:overview}
+
+\section{Tổng quan về Biểu diễn Tri thức trong Trí tuệ Nhân tạo}
+Biểu diễn tri thức (Knowledge Representation - KR) là phân ngành cốt lõi của Trí tuệ Nhân tạo, nghiên cứu cách thức chuyển tải sự hiểu biết của con người về thế giới thực vào các cấu trúc dữ liệu hình thức mà máy tính có thể lưu trữ, truy vấn và thực hiện suy diễn suy lý \cite{russell2020artificial, do2015bieudientrithuc}. Một mô hình biểu diễn tri thức hiệu quả cần đảm bảo hai yếu tố:
+\begin{itemize}
+    \item \textbf{Tính biểu đạt (Expressive Power)}: Đủ phong phú để mô tả chính xác các đối tượng, tính chất, quan hệ không gian và quy luật phức tạp trong miền ứng dụng.
+    \item \textbf{Tính toán được và hiệu quả (Computational Tractability)}: Thuật toán suy diễn trên cơ sở tri thức phải hội tụ trong thời gian chấp nhận được, hạn chế bùng nổ tổ hợp (Combinatorial Explosion).
+\end{itemize}
+
+Trong lịch sử phát triển của AI, các phương pháp biểu diễn tri thức kinh điển bao gồm:
+\begin{enumerate}
+    \item \textbf{Logic Mệnh đề và Logic Vị từ Bậc nhất (First-Order Logic - FOL)}: Biểu diễn sự kiện thông qua các quan hệ vị từ hình thức $P(x_1, \dots, x_n)$ và các luật suy diễn dạng Horn Clause $\bigwedge A_i \implies B$. Logic vị từ có nền tảng ngữ nghĩa toán học chặt chẽ và tính đúng đắn (Soundness) tuyệt đối.
+    \item \textbf{Mạng Ngữ nghĩa (Semantic Networks) và Khung Tri thức (Frames)}: Do Quillian và Minsky đề xuất, biểu diễn thực thể dưới dạng các nút và quan hệ ngữ nghĩa dưới dạng các cung có hướng (chẳng hạn quan hệ thừa kế \texttt{IS\_A}, quan hệ thành phần \texttt{PART\_OF}).
+    \item \textbf{Hệ Chuyên gia dựa trên Luật (Rule-Based Expert Systems)}: Tách biệt rõ ràng giữa Cơ sở Tri thức (Knowledge Base) chứa tập luật nếu-thì và Động cơ Suy diễn (Inference Engine) sử dụng thuật toán Rete hoặc suy diễn tiến/lùi (Forward/Backward Chaining).
+    \item \textbf{Đồ thị Tri thức (Knowledge Graph - KG) và Ontology (OWL/RDF)}: Sự kế thừa và phát triển hiện đại của Mạng ngữ nghĩa, tổ chức tri thức dưới dạng đồ thị có thuộc tính (Property Graph) trên các cơ sở dữ liệu chuyên dụng như Neo4j, hỗ trợ truy vấn cấu trúc mạnh mẽ qua ngôn ngữ Cypher \cite{auer2007dbpedia}.
+\end{enumerate}
+
+\section{Lịch sử và Các Phương pháp Chứng minh Hình học Tự động}
+Chứng minh định lý tự động trong hình học phẳng (Automated Theorem Proving in Geometry) đã trải qua hơn nửa thế kỷ nghiên cứu với các trường phái chính:
+
+\subsection{Phương pháp Đại số Tọa độ (Algebraic Coordinate Methods)}
+\begin{itemize}
+    \item \textbf{Phương pháp Wu (Wu's Method)}: Do nhà toán học Trung Quốc Wu Wen-tsun phát triển vào năm 1977 dựa trên lý thuyết Ritt-Wu Characteristic Set \cite{wu1984basic}. Phương pháp này chuyển toàn bộ giả thiết và kết luận hình học thành hệ phương trình đa thức trên tọa độ Cartesian, sau đó sử dụng phép chia đa thức để kiểm tra xem đa thức kết luận có thuộc ideal sinh bởi các đa thức giả thiết hay không.
+    \item \textbf{Phương pháp Cơ sở Gröbner (Gröbner Basis Method)}: Sử dụng thuật toán Buchberger để kiểm tra tính thuộc về của đa thức kết luận trong đại số giao hoán.
+\end{itemize}
+\textit{Hạn chế}: Các phương pháp đại số tọa độ có thể giải quyết được các bài toán rất khó nhưng hoàn toàn đánh mất ý nghĩa hình học trực quan, sinh ra các biểu thức đại số khổng lồ và không tạo ra được lời giải sư phạm từng bước theo tư duy con người.
+
+\subsection{Phương pháp Ký hiệu và Diện tích (Synthetic \& Area Methods)}
+\begin{itemize}
+    \item \textbf{Phương pháp Diện tích (Chou's Area Method)}: Do Chou, Gao và Zhang phát triển năm 1994 \cite{chou1994machine}. Phương pháp sử dụng các bất biến hình học như diện tích có hướng của tam giác ($S_{ABC}$) và tỉ số đoạn thẳng có hướng để khử dần các điểm phụ, đưa kết luận về hằng số 0 hoặc 1.
+    \item \textbf{Ưu điểm}: Tạo ra các bước chứng minh hình thức dễ đọc hơn nhiều so với phương pháp tọa độ Wu.
+\end{itemize}
+
+\subsection{Phương pháp Cơ sở Dữ liệu Suy diễn (Deductive Database - DD)}
+Mô hình Deductive Database lưu trữ tập các sự kiện hình học ban đầu và lặp đi lặp lại việc so khớp các tiên đề/định lý trong cơ sở tri thức để tạo ra các sự kiện mới (Forward Chaining) cho đến khi đạt được mục tiêu chứng minh. Đây là nền tảng cốt lõi được áp dụng trong hệ thống FormalGeo và AlphaGeometry.
+
+\section{Kiến trúc Đột phá AlphaGeometry của Google DeepMind}
+Vào tháng 1 năm 2024, nhóm nghiên cứu Google DeepMind (Trịnh Triều và cộng sự) công bố hệ thống \textbf{AlphaGeometry} trên tạp chí \textit{Nature} \cite{trinh2024alphageometry}, giải quyết thành công 25/30 bài toán hình học trong các kỳ thi Olympic Toán học Quốc tế (IMO) từ năm 2000 đến 2022, tiếp cận năng lực của các thí sinh đạt huy chương vàng.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance=1.8cm, auto]
+    \node [base, fill=blue!15, text width=3.8cm] (input) {\textbf{Đề bài Hình học}\\(Ngôn ngữ tự nhiên / Vị từ)};
+    \node [process, fill=green!15, right of=input, xshift=3.5cm, text width=4.5cm] (dd) {\textbf{Symbolic Engine (DD+AR)}\\Suy diễn tiến + Đại số hóa};
+    \node [decision, below of=dd, yshift=-0.8cm] (check) {Mục tiêu đạt được?};
+    \node [base, fill=teal!20, right of=check, xshift=3.5cm, text width=3.5cm] (success) {\textbf{Chứng minh Thành công!}\\\faCheckCircle\ Xuất lời giải logic};
+    \node [agent, fill=purple!20, left of=check, xshift=-3.5cm, text width=4.2cm] (neural) {\textbf{Neural Model (LLM)}\\Đề xuất hình phụ (Auxiliary)};
+
+    \draw [arrow] (input) -- (dd);
+    \draw [arrow] (dd) -- (check);
+    \draw [arrow] (check) -- node[above] {Có} (success);
+    \draw [arrow] (check) -- node[left] {Không (Bế tắc)} (neural);
+    \draw [arrow] (neural) |- node[near start, left] {Thêm điểm/đường phụ} (dd);
+\end{tikzpicture}
+\caption{Sơ đồ vòng lặp cộng sinh Neuro-Symbolic của AlphaGeometry (Google DeepMind).}
+\label{fig:alphageometry_loop}
+\end{figure}
+
+Kiến trúc AlphaGeometry dựa trên sự phối hợp nhịp nhàng giữa hai thành phần:
+\begin{enumerate}
+    \item \textbf{Cỗ máy Ký hiệu (Symbolic Engine -- DD + AR)}:
+    \begin{itemize}
+        \item \textbf{DD (Deductive Database)}: Thực hiện suy diễn tiến trên các tiên đề hình học phẳng thuần túy (quan hệ tam giác bằng nhau, tứ giác nội tiếp, song song, vuông góc).
+        \item \textbf{AR (Algebraic Reasoning)}: Xử lý các hệ thức góc (Angle Chasing) và tỉ số đoạn thẳng dựa trên khử đại số tuyến tính trong các lớp tương đương.
+    \end{itemize}
+    \item \textbf{Mô hình Thần kinh (Neural Language Model)}:
+    Khi động cơ ký hiệu chạy đến trạng thái bão hòa (không thể sinh thêm sự kiện mới mà chưa đạt được mục tiêu -- Proof Gap), mô hình ngôn ngữ sẽ phân tích đồ thị hình học hiện tại và dự đoán một đối tượng bổ trợ tối ưu (Auxiliary Construction) như: lấy trung điểm, dựng đường cao, kẻ tiếp tuyến, hoặc dựng đường tròn ngoại tiếp. Sau khi thêm đối tượng mới, quyền kiểm soát được trao lại cho cỗ máy ký hiệu để tiếp tục suy diễn.
+\end{enumerate}
+
+\section{Tập Tiên đề Hình học Phẳng FormalGeo và Chuẩn hóa Vị từ}
+Dự án \textbf{FormalGeo} \cite{zhang2023formalgeo} là một nỗ lực cộng đồng quy mô lớn nhằm hình thức hóa toàn bộ chương trình hình học phẳng phổ thông thành tập hợp gần 300 định lý và tiên đề vị từ có thể thực thi tự động trên máy tính. 
+
+Trong tiểu luận này, chúng tôi kế thừa triết lý của FormalGeo và AlphaGeometry, xây dựng một cơ sở tri thức hình học toàn diện, chuẩn hóa các vị từ toán học, đưa toàn bộ vào Đồ thị Tri thức Neo4j và chỉ mục Vector Qdrant, đồng thời kết hợp động cơ đại số máy tính SymPy để hiện thực hóa cỗ máy suy diễn hình học phẳng hoàn chỉnh.

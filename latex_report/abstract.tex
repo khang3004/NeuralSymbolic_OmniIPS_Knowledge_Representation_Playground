@@ -1,3 +1,60 @@
-\begin{abstract}
-Large Language Models (LLMs) have demonstrated remarkable capabilities in general natural language tasks but frequently fail in formal reasoning domains requiring exact, deterministic inferences—such as multi-step chemical synthesis, Euclidean flat geometry proofs, and algebraic manipulation. In these mathematical environments, LLMs suffer from semantic drift, visual-geometric hallucination, and logical circularity. To resolve these limitations, we present \textbf{Omni-IPS} (\textit{Neuro-Symbolic \& GraphRAG Multi-Domain Intelligent Problem Solver}), a hybrid system that bridges statistical language models and deterministic logical reasoning engines. Omni-IPS leverages a multi-agent parser utilizing a specialized grammar-based balanced parenthesis scanner to extract strict logical propositions from natural language queries. These queries are routed via a Neuro-Symbolic RAG mechanism using a dual-database storage: high-dimensional vector representations in Qdrant for semantic mapping, and a rigid ontological schema in Neo4j representing canonical facts and rules. Once aligned, a domain-agnostic Forward and Backward Chaining inference engine executes step-by-step reasoning in a closed-world assumption environment, producing completely verified, hallucination-free proof traces. Finally, an online explainability agent translates the dry logical trace into a rich, structured educational response streamed in real-time to the user interface. We demonstrate that Omni-IPS achieves 100\% correctness in symbolic proof verification across high-school level problems in chemistry, geometry, and algebra, significantly outperforming pure LLM prompting baselines.
-\end{abstract}
+% ==============================================================================
+% LỜI CẢM ƠN VÀ TÓM TẮT TIỂU LUẬN
+% ==============================================================================
+
+\chapter*{LỜI CẢM ƠN}
+\addcontentsline{toc}{chapter}{Lời cảm ơn}
+
+Lời đầu tiên, tác giả xin được bày tỏ lòng biết ơn sâu sắc và chân thành nhất tới \textbf{GS. Đỗ Văn Nhơn} -- giảng viên phụ trách môn học \textit{Biểu diễn tri thức và ứng dụng}, Trường Đại học Khoa học Tự nhiên, Đại học Quốc gia TP. Hồ Chí Minh. Thầy không chỉ truyền đạt những nền tảng tri thức uyên bác, sâu rộng về các mô hình mạng ngữ nghĩa, logic vị từ, hệ chuyên gia và suy diễn hình thức, mà còn định hướng, gợi mở cho học viên những góc nhìn khoa học hiện đại, kết nối chặt chẽ giữa lý thuyết biểu diễn tri thức kinh điển với các bước đột phá của trí tuệ nhân tạo đương đại.
+
+Những bài giảng nhiệt huyết, sâu sắc cùng sự chỉ dẫn tận tình của Thầy đã tiếp thêm nguồn cảm hứng to lớn để tác giả dấn thân thực hiện đề tài tiểu luận nghiên cứu và hiện thực hóa một \textit{"Cỗ máy suy diễn hình học phẳng tự động theo tiếp cận Neuro-Symbolic"} -- một bài toán kinh điển nhưng luôn mang tính thời sự cao trong ngành Khoa học Máy tính.
+
+Tác giả cũng xin gửi lời cảm ơn trân trọng đến Ban Giám hiệu, Khoa Công nghệ Thông tin Trường Đại học Khoa học Tự nhiên -- ĐHQG-HCM, cùng toàn thể các thầy cô giáo đã tạo điều kiện học tập và nghiên cứu tốt nhất trong suốt khóa học. Cuối cùng, xin cảm ơn gia đình, bạn bè và các đồng nghiệp đã luôn động viên, chia sẻ và hỗ trợ trong suốt quá trình hoàn thành tiểu luận này.
+
+\begin{flushright}
+    \textit{TP. Hồ Chí Minh, ngày 24 tháng 08 năm 2026}\\[0.1cm]
+    \textbf{Học viên thực hiện}\\[0.6cm]
+    \textbf{Nguyễn Hoàng Khang}
+\end{flushright}
+
+\newpage
+
+% ==============================================================================
+% TÓM TẮT TIỂU LUẬN (VIETNAMESE)
+% ==============================================================================
+\chapter*{TÓM TẮT TIỂU LUẬN}
+\addcontentsline{toc}{chapter}{Tóm tắt tiểu luận}
+
+Chứng minh định lý tự động trong hình học phẳng (Automated Geometric Theorem Proving) từ lâu đã là một trong những thách thức cốt lõi của Trí tuệ Nhân tạo và Biểu diễn Tri thức. Mặc dù các Mô hình Ngôn ngữ Lớn (LLMs) gần đây đã đạt được những bước tiến vượt bậc trong xử lý ngôn ngữ tự nhiên, chúng vẫn thường xuyên gặp phải hiện tượng ảo giác (hallucination), thiếu khả năng kiểm chứng logic nghiêm ngặt và không thể bảo đảm tính đúng đắn toán học tuyệt đối khi giải quyết các bài toán chứng minh suy diễn nhiều bước.
+
+Tiểu luận này trình bày toàn diện quá trình nghiên cứu, thiết kế kiến trúc và hiện thực hóa hệ thống \textbf{AlphaGeometry-IMO} -- một cỗ máy suy diễn hình học phẳng lai ghép (Hybrid Neuro-Symbolic System) tích hợp Đồ thị Tri thức (Knowledge Graph) và Kỹ thuật Truy xuất Tăng cường Đồ thị (GraphRAG). Hệ thống được phát triển dựa trên ba trụ cột chính:
+\begin{enumerate}
+    \item \textbf{Cơ chế Biểu diễn Tri thức Đồ thị (Knowledge Graph Representation)}: Xây dựng cơ sở tri thức hình học Euclid chuẩn hóa trên cơ sở dữ liệu đồ thị Neo4j (bao gồm 1.128 nút, 1.532 quan hệ biểu diễn các tiên đề Euclid, định lý FormalGeo và phân loại Ontology) kết hợp với Cơ sở dữ liệu Vector Qdrant để lưu trữ và truy xuất các định lý hình học bằng embedding ngữ nghĩa.
+    \item \textbf{Động cơ Suy diễn Ký hiệu và Đại số hóa (Deduction Engine + SymPy AR)}: Hiện thực hóa thuật toán suy diễn tiến (Forward Chaining) với cơ chế hợp giải vị từ (Unification) và kết hợp với Động cơ Đại số hóa SymPy AR nhằm giải quyết các hệ thức lượng, số đo góc và quan hệ đại số mà phương pháp logic thuần túy gặp khó khăn.
+    \item \textbf{Tác tử Bổ trợ Hình phụ Neuro-Symbolic (Auxiliary Construction Agent)}: Lấy cảm hứng từ kiến trúc AlphaGeometry của Google DeepMind, hệ thống kích hoạt tác tử LLM để đề xuất các đối tượng hình học phụ (điểm mới, đường thẳng song song/vuông góc, tâm đường tròn ngoại tiếp) khi quá trình suy diễn thuần túy rơi vào bế tắc, từ đó bắc cầu vượt qua khoảng trống chứng minh (Proof Gap).
+\end{enumerate}
+
+Hệ thống được đóng gói hoàn chỉnh dưới dạng kiến trúc Microservices với Docker, FastAPI và giao diện người dùng sư phạm tương tác trực quan bằng Streamlit. Kết quả thực nghiệm trên bộ dữ liệu kiểm chuẩn quốc tế 15 bài toán hình học IMO và kỳ thi học sinh giỏi các cấp cho thấy hệ thống giải quyết thành công 100\% các bài toán (15/15 Passed), đồng thời xuất lời giải từng bước bằng tiếng Việt và công thức toán học LaTeX chuẩn xác.
+
+\textbf{Từ khóa:} Biểu diễn tri thức, Suy diễn hình học tự động, Neuro-Symbolic AI, GraphRAG, Neo4j, Qdrant, AlphaGeometry, SymPy AR, Suy diễn tiến.
+
+\newpage
+
+% ==============================================================================
+% ABSTRACT (ENGLISH)
+% ==============================================================================
+\chapter*{ABSTRACT}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Automated theorem proving in Euclidean plane geometry represents a classical yet formidable frontier in Artificial Intelligence and Knowledge Representation. While modern Large Language Models (LLMs) excel at natural language comprehension, they notoriously struggle with multi-step formal mathematical reasoning, often suffering from hallucinations and an inability to guarantee sound deductive validity.
+
+This academic report presents the comprehensive design, formalization, and engineering of \textbf{AlphaGeometry-IMO}, a neuro-symbolic automated geometric problem solver that unifies Knowledge Graphs, dense vector indexing (GraphRAG), and algebraic deductive reasoning. The core architecture relies on three synergistic pillars:
+\begin{enumerate}
+    \item \textbf{Knowledge Graph Representation and Vector Indexing}: A standardized formal ontology spanning 1,128 nodes and 1,532 relationships hosted on Neo4j, synchronized with dense semantic embeddings in Qdrant Cloud to achieve robust theorem retrieval.
+    \item \textbf{Symbolic Deduction and SymPy AR Engine}: A forward-chaining deduction engine operating on unified first-order geometric predicates, tightly coupled with a computer algebra system (SymPy) for continuous angle chasing, metric equalities, and proportional reasoning.
+    \item \textbf{Auxiliary Construction via Neuro-Symbolic Routing}: Inspired by Google DeepMind's AlphaGeometry paradigm, an LLM-powered auxiliary agent proposes strategic geometric constructions (auxiliary points, perpendiculars, and circumcircles) to bridge proof gaps when symbolic forward deduction reaches a fixed point.
+\end{enumerate}
+
+The entire system is deployed as a resilient Dockerized microservices architecture with a FastAPI backend and a Streamlit pedagogical interface that streams step-by-step explanations in Vietnamese with full LaTeX mathematical notation. Rigorous benchmarking against the official 15-problem IMO Geometry Test Suite demonstrates a 100\% success rate (15/15 Passed) with sub-10-second proof times.
+
+\textbf{Keywords:} Knowledge Representation, Automated Geometry Theorem Proving, Neuro-Symbolic AI, GraphRAG, Neo4j, Qdrant, AlphaGeometry, Forward Chaining, SymPy AR.

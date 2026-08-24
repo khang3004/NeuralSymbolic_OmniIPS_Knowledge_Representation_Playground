@@ -1,0 +1,117 @@
+% ==============================================================================
+% CHƯƠNG 3: KIẾN TRÚC SUY DIỄN NEURO-SYMBOLIC, ĐẠI SỐ HÓA VÀ DỰNG HÌNH PHỤ
+% ==============================================================================
+
+\chapter{KIẾN TRÚC SUY DIỄN NEURO-SYMBOLIC, ĐẠI SỐ HÓA VÀ DỰNG HÌNH PHỤ}
+\label{chap:reasoning}
+
+\section{Động cơ Suy diễn Tiến Ký hiệu (Forward Chaining Deduction Engine)}
+Cốt lõi của cỗ máy chứng minh hình thức là \textbf{Động cơ Suy diễn Tiến (Forward Chaining Deduction Engine)}, hoạt động trên Bộ nhớ Làm việc ($\mathcal{WM}$ -- Working Memory).
+
+\subsection{Cấu trúc Tập Luật và Hợp giải Vị từ (Unification)}
+Mỗi luật suy diễn hình học $r \in \mathcal{R}$ được định nghĩa bởi cặp tiền đề và kết luận:
+\begin{equation}
+    r = \langle \text{Inputs}(r), \text{Outputs}(r) \rangle
+\end{equation}
+trong đó $\text{Inputs}(r) = \{p_1(?x_1, \dots), \dots, p_k(?x_k, \dots)\}$ là tập các mẫu vị từ chứa biến (bắt đầu bằng dấu \texttt{?}), và $\text{Outputs}(r) = \{q_1(?x_1, \dots), \dots, q_m(?x_m, \dots)\}$ là các sự kiện suy ra sau khi thế biến.
+
+\begin{algorithm}[h!]
+\caption{Thuật toán Suy diễn Tiến Hình học Phẳng (Forward Chaining with Canonical Normalization)}
+\label{alg:forward_chaining}
+\begin{algorithmic}[1]
+\Require Tập sự kiện ban đầu $\mathcal{F}_0$, Mục tiêu cần chứng minh $\mathcal{G}$, Tập quy tắc $\mathcal{R}$, Giới hạn lặp $MaxDepth$
+\Ensure Kết quả chứng minh $Success \in \{\text{True}, \text{False}\}$, Dấu vết thực thi $\mathcal{T}$
+\State $\mathcal{WM} \leftarrow \text{NormalizeFacts}(\mathcal{F}_0)$
+\State $\mathcal{T} \leftarrow []$
+\State $iteration \leftarrow 0$
+\While{$iteration < MaxDepth$}
+    \If{$\text{CheckGoal}(\mathcal{WM}, \mathcal{G})$}
+        \State \Return $\langle \text{True}, \mathcal{T}, \mathcal{WM} \rangle$
+    \EndIf
+    \State $NewFactsFound \leftarrow \text{False}$
+    \For{mỗi luật $r \in \mathcal{R}$}
+        \State $\Theta \leftarrow \text{FindAllSubstitutions}(\text{Inputs}(r), \mathcal{WM})$
+        \For{mỗi phép thế biến $\theta \in \Theta$}
+            \State $NewFacts \leftarrow \text{ApplySubstitution}(\text{Outputs}(r), \theta)$
+            \State $UnseenFacts \leftarrow \{f \in NewFacts \mid \text{Canonical}(f) \notin \mathcal{WM}\}$
+            \If{$UnseenFacts \neq \emptyset$}
+                \State $\mathcal{WM} \leftarrow \mathcal{WM} \cup UnseenFacts$
+                \State Thêm bước suy diễn $\langle r, \theta, UnseenFacts \rangle$ vào $\mathcal{T}$
+                \State $NewFactsFound \leftarrow \text{True}$
+            \EndIf
+        \EndFor
+    \EndFor
+    \If{$\textbf{not } NewFactsFound$}
+        \State \textbf{break} \Comment{Đã đạt điểm bất động (Fixed Point) của suy diễn thuần túy}
+    \EndIf
+    \State $iteration \leftarrow iteration + 1$
+\EndWhile
+\State \Return $\langle \text{CheckGoal}(\mathcal{WM}, \mathcal{G}), \mathcal{T}, \mathcal{WM} \rangle$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Chuẩn hóa Đồng nhất và Quan hệ Tương đương (Canonical Equivalence)}
+Trong hình học, một đối tượng có thể được gọi bằng nhiều tên gọi tương đương, ví dụ:
+$$\text{Segment}(A, B) \equiv \text{Segment}(B, A)$$
+$$\text{Angle}(A, B, C) \equiv \text{Angle}(C, B, A)$$
+$$\text{Triangle}(A, B, C) \equiv \text{Triangle}(B, C, A) \equiv \text{Triangle}(C, B, A)$$
+$$\text{Congruent}(AB, CD) \equiv \text{Congruent}(CD, AB) \equiv \text{Congruent}(BA, CD) \equiv \text{Congruent}(DC, AB)$$
+
+Nếu không chuẩn hóa, động cơ suy diễn sẽ bị bùng nổ tổ hợp hoặc bỏ sót các phép so khớp biến. Hệ thống cài đặt bộ chuẩn hóa chính tắc (\texttt{Canonicalizer}) tự động sắp xếp thứ tự các đỉnh theo bảng chữ cái đối với các quan hệ có tính đối xứng trước khi nạp vào $\mathcal{WM}$.
+
+\section{Động cơ Suy diễn Đại số SymPy AR (Algebraic Reasoning)}
+Suy diễn hình thức dựa trên tập luật nếu-thì thuần túy (Pure Pattern Matching) gặp điểm yếu chí mạng khi đối mặt với các bài toán tính toán số đo liên tục, ví dụ:
+\begin{itemize}
+    \item Tổng ba góc trong tam giác: $\angle A + \angle B + \angle C = 180^\circ$.
+    \item Hệ thức lượng trong tam giác vuông: $\frac{1}{AH^2} = \frac{1}{AB^2} + \frac{1}{AC^2}$.
+    \item Phương tích đường tròn: $MA^2 = MC \cdot MD$.
+\end{itemize}
+Để khắc phục hoàn toàn hạn chế này, chúng tôi xây dựng phân hệ \textbf{SymPy AR (Algebraic Reasoning Engine)} dựa trên thư viện tính toán biểu thức đại số ký hiệu \textbf{SymPy}.
+
+\subsection{Cơ chế Hoạt động của SymPy AR}
+\begin{enumerate}
+    \item \textbf{Đại số hóa Vị từ (Equation Extraction)}: Quét toàn bộ các sự kiện dạng $\text{Equal}(\dots)$ trong $\mathcal{WM}$ và chuyển thành các phương trình đại số chứa biến ký hiệu:
+    $$\text{Equal}(\text{Angle}(A), 60) \implies \theta_A - 60 = 0$$
+    $$\text{Equal}(\text{Add}(\text{Angle}(A), \text{Angle}(B), \text{Angle}(C)), 180) \implies \theta_A + \theta_B + \theta_C - 180 = 0$$
+    \item \textbf{Khử Ẩn số và Giải Hệ Phương trình (Elimination \& Linear Solving)}: Sử dụng ma trận giải hệ phương trình tuyến tính hoặc phương pháp phần bù (Elimination Method) của SymPy để giải tìm giá trị ẩn số của mục tiêu:
+    $$\theta_C = 180 - \theta_A - \theta_B = 180 - 60 - 70 = 50^\circ$$
+    \item \textbf{Tái tạo Vị từ (Fact Injection)}: Khi một giá trị đại số mới được chứng minh, nó được đóng gói lại thành vị từ chính quy $\text{Equal}(\text{Angle}(C), 50)$ và nạp ngược trở lại $\mathcal{WM}$.
+\end{enumerate}
+
+\section{Tác tử Sinh Hình phụ Neuro-Symbolic (Auxiliary Construction Agent)}
+Trong các bài toán hình học nâng cao (đặc biệt là đề thi học sinh giỏi và Olympic IMO), nhiều định lý không thể chứng minh trực tiếp nếu chỉ dựa trên các đối tượng ban đầu. Cần phải kẻ thêm các \textbf{đối tượng hình học phụ (Auxiliary Elements)}.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance=2.2cm, auto]
+    \node [base, fill=blue!10, text width=3.5cm] (start) {\textbf{Tập sự kiện ban đầu $\mathcal{F}_0$}};
+    \node [process, fill=green!15, right of=start, xshift=3.5cm, text width=4.5cm] (forward) {\textbf{Forward Deduction}\\(Tiên đề Euclid + FormalGeo)};
+    \node [process, fill=yellow!20, below of=forward, yshift=-0.5cm, text width=4.5cm] (sympy) {\textbf{SymPy AR Engine}\\(Đại số hóa góc \& đoạn thẳng)};
+    \node [decision, below of=sympy, yshift=-0.8cm] (goal_check) {Đạt Goal?};
+    \node [base, fill=teal!20, right of=goal_check, xshift=3.5cm, text width=3.5cm] (done) {\textbf{Hoàn thành!} \\\faCheck\ Lời giải hợp lệ};
+    \node [agent, fill=purple!20, left of=goal_check, xshift=-3.5cm, text width=4.5cm] (aux) {\textbf{Auxiliary Agent (LLM)}\\Phân tích Proof Gap \& Đề xuất điểm/đường phụ};
+
+    \draw [arrow] (start) -- (forward);
+    \draw [arrow] (forward) -- (sympy);
+    \draw [arrow] (sympy) -- (goal_check);
+    \draw [arrow] (goal_check) -- node[above] {Có} (done);
+    \draw [arrow] (goal_check) -- node[left] {Bế tắc} (aux);
+    \draw [arrow] (aux) |- node[near start, left] {Nạp đối tượng phụ mới vào $\mathcal{WM}$} (forward);
+\end{tikzpicture}
+\caption{Quy trình phối hợp toàn diện giữa Suy diễn tiến, SymPy AR và Tác tử Sinh hình phụ.}
+\label{fig:full_reasoning_flow}
+\end{figure}
+
+\subsection{Chiến lược Đề xuất Hình phụ}
+Khi cỗ máy suy diễn đạt điểm bất động mà chưa đạt mục tiêu, \textbf{Tác tử Bổ trợ Hình phụ (Auxiliary Agent)} được kích hoạt:
+\begin{enumerate}
+    \item \textbf{Nhận diện Khoảng trống Chứng minh (Gap Analysis)}: So sánh tập sự kiện hiện có với cấu trúc vị từ của mục tiêu (ví dụ: mục tiêu yêu cầu chứng minh $\text{CyclicQuadrilateral}$, nhưng hiện chưa có đường tròn ngoại tiếp).
+    \item \textbf{Đề xuất Mẫu Hình phụ Hợp lệ}:
+    \begin{itemize}
+        \item Dựng đường kính hoặc tâm đường tròn ngoại tiếp: $\text{Circumcircle}(\text{Circle}(O), \text{Triangle}(A, B, C))$.
+        \item Lấy trung điểm đoạn thẳng: $\text{Midpoint}(M, AB)$.
+        \item Dựng đường cao hoặc đường vuông góc: $\text{Perpendicular}(AH, BC)$.
+        \item Nối hai đỉnh chưa liên kết để tạo tam giác đồng dạng.
+    \end{itemize}
+    \item \textbf{Cập nhật Không gian Trạng thái}: Các đối tượng mới được thêm vào $\mathcal{WM}$ cùng với các tiên đề định nghĩa liên quan, mở đường cho Động cơ Suy diễn tiếp tục bứt phá để đi đến lời giải cuối cùng.
+\end{enumerate}

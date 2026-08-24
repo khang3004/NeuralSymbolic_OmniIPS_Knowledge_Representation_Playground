@@ -1,0 +1,133 @@
+% ==============================================================================
+% PHẦN PHỤ LỤC (APPENDIX)
+% ==============================================================================
+
+\chapter*{PHỤ LỤC: BỘ KIỂM CHUẨN 15 BÀI TOÁN HÌNH HỌC IMO VÀ MÃ NGUỒN}
+\addcontentsline{toc}{chapter}{Phụ lục: Bộ kiểm chuẩn 15 bài toán và Mã nguồn}
+\label{chap:appendix}
+
+\section*{A. Danh sách 15 Bài toán trong Bộ Kiểm chuẩn IMO Benchmark Suite}
+
+\subsection*{Cấp độ 1: Cơ bản (Basic Tier)}
+\begin{enumerate}
+    \item \textbf{Bài 1 (Tổng ba góc tam giác)}: Cho tam giác $ABC$. Biết $\angle A = 60^\circ, \angle B = 70^\circ$. Chứng minh rằng $\angle C = 50^\circ$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Triangle}(A,B,C), \text{Equal}(\angle BAC, 60), \text{Equal}(\angle ABC, 70)\} \\
+        \mathcal{G} &= \text{Equal}(\angle ACB, 50)
+    \end{align*}
+    
+    \item \textbf{Bài 2 (Tam giác bằng nhau $c-g-c$)}: Cho hai tam giác $ABC$ và $DEF$. Biết $AB = DE, AC = DF$ và $\angle BAC = \angle EDF$. Chứng minh $\triangle ABC \cong \triangle DEF$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Triangle}(A,B,C), \text{Triangle}(D,E,F), \text{Congruent}(AB,DE), \\
+        &\quad\ \ \text{Congruent}(AC,DF), \text{Equal}(\angle BAC, \angle EDF)\} \\
+        \mathcal{G} &= \text{CongruentTriangles}(ABC, DEF)
+    \end{align*}
+
+    \item \textbf{Bài 3 (Góc đồng vị hai đường song song)}: Cho hai đường thẳng $AB \parallel CD$. Đường thẳng cát tuyến $E$ cắt $AC$. Chứng minh $\angle EAB = \angle ACD$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Parallel}(AB, CD), \text{Collinear}(A, C, E)\} \\
+        \mathcal{G} &= \text{Equal}(\angle BAE, \angle ACD)
+    \end{align*}
+\end{enumerate}
+
+\subsection*{Cấp độ 2: Trung bình (Intermediate Tier)}
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \textbf{Bài 4 (Tổng hai góc đối tứ giác nội tiếp)}: Cho tứ giác nội tiếp $ABCD$ trên đường tròn $(O)$. Chứng minh rằng $\angle DAB + \angle BCD = 180^\circ$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Circle}(O), \text{CyclicQuadrilateral}(A,B,C,D,\text{Circle}(O))\} \\
+        \mathcal{G} &= \text{Equal}(\text{Add}(\angle BAD, \angle BCD), 180)
+    \end{align*}
+
+    \item \textbf{Bài 5 (Đường trung bình tam giác)}: Cho tam giác $ABC$. $E$ là trung điểm của $AB$, $F$ là trung điểm của $AC$. Chứng minh $EF \parallel BC$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Triangle}(A,B,C), \text{Midpoint}(E,AB), \text{Midpoint}(F,AC)\} \\
+        \mathcal{G} &= \text{Parallel}(BC, EF)
+    \end{align*}
+
+    \item \textbf{Bài 6 (Định lý hai dây cung cắt nhau)}: Cho đường tròn $(O)$ có hai dây cung $AB$ và $CD$ cắt nhau tại $P$. Chứng minh $PA \cdot PB = PC \cdot PD$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Circle}(O), \text{Chord}(A,B), \text{Chord}(C,D), \text{IntersectionPoint}(P,AB,CD)\} \\
+        \mathcal{G} &= \text{Equal}(\text{Mul}(PA, PB), \text{Mul}(PC, PD))
+    \end{align*}
+\end{enumerate}
+
+\subsection*{Cấp độ 3: Nâng cao (Advanced Tier)}
+\begin{enumerate}
+    \setcounter{enumi}{6}
+    \item \textbf{Bài 7 (Hệ thức lượng đường cao tam giác vuông)}: Cho tam giác $ABC$ vuông tại $A$, $H$ là hình chiếu của $A$ lên $BC$. Chứng minh $\frac{1}{AH^2} = \frac{1}{AB^2} + \frac{1}{AC^2}$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{RightTriangle}(A,B,C), \text{Foot}(H,A,BC)\} \\
+        \mathcal{G} &= \text{Equal}(1/AH^2, 1/AB^2 + 1/AC^2)
+    \end{align*}
+
+    \item \textbf{Bài 8 (Định lý Ptolemy)}: Cho tứ giác nội tiếp $ABCD$. Chứng minh $AC \cdot BD = AB \cdot CD + BC \cdot AD$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Circle}(O), \text{CyclicQuadrilateral}(A,B,C,D,\text{Circle}(O))\} \\
+        \mathcal{G} &= \text{Equal}(AC \cdot BD, AB \cdot CD + AD \cdot BC)
+    \end{align*}
+
+    \item \textbf{Bài 9 (Định lý Tiếp tuyến - Cát tuyến)}: Cho điểm $P$ nằm ngoài $(O)$, tiếp tuyến $PT$, cát tuyến $PAB$. Chứng minh $PT^2 = PA \cdot PB$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Circle}(O), \text{PointOutsideCircle}(P), \text{TangentSegment}(P,T), \text{SecantSegment}(P,A,B)\} \\
+        \mathcal{G} &= \text{Equal}(PT^2, PA \cdot PB)
+    \end{align*}
+
+    \item \textbf{Bài 10 (Đường chéo hình thoi vuông góc)}: Cho tứ giác $ABCD$ là hình thoi. Chứng minh $AC \perp BD$.
+    \begin{align*}
+        \mathcal{F}_0 &= \{\text{Rhombus}(A,B,C,D)\} \\
+        \mathcal{G} &= \text{Perpendicular}(AC, BD)
+    \end{align*}
+\end{enumerate}
+
+\subsection*{Cấp độ 4: Olympic (Olympiad Tier)}
+\begin{enumerate}
+    \setcounter{enumi}{10}
+    \item \textbf{Bài 11 (Định lý Ceva)}: Cho tam giác $ABC$, các đường thẳng $AD, BE, CF$ đồng quy. Chứng minh $\frac{AF}{FB} \cdot \frac{BD}{DC} \cdot \frac{CE}{EA} = 1$.
+    \item \textbf{Bài 12 (Định lý Menelaus)}: Cho tam giác $ABC$, đường thẳng cắt các đường chứa cạnh tại $D, E, F$ thẳng hàng. Chứng minh $\frac{AF}{FB} \cdot \frac{BD}{DC} \cdot \frac{CE}{EA} = 1$.
+    \item \textbf{Bài 13 (Định lý Đường thẳng Simson)}: $P$ thuộc đường tròn ngoại tiếp $\triangle ABC$. $X, Y, Z$ là hình chiếu của $P$ lên 3 cạnh. Chứng minh $X, Y, Z$ thẳng hàng.
+    \item \textbf{Bài 14 (Định lý Varignon)}: $M, N, P, Q$ là trung điểm 4 cạnh tứ giác $ABCD$. Chứng minh $MP$ và $NQ$ cắt nhau tại trung điểm mỗi đường.
+    \item \textbf{Bài 15 (Bổ đề Điểm Nagel)}: $T_a, T_b, T_c$ là tiếp điểm của 3 đường tròn bàng tiếp với 3 cạnh tam giác $ABC$. Chứng minh $AT_a, BT_b, CT_c$ đồng quy.
+\end{enumerate}
+
+\section*{B. Trích đoạn Mã Nguồn Suy diễn Tiến (Core Forward Chaining)}
+
+\begin{lstlisting}[style=pythonstyle, caption={Hàm suy diễn tiến hình học chính (\texttt{core\_engine/solver.py})}]
+def forward_chain(rules: list[dict], initial_facts: list[str], max_depth: int = 15) -> tuple[set[str], list[dict]]:
+    """
+    Deductive forward chaining on geometric facts.
+    Applies pattern matching, variable substitution, and canonicalization.
+    """
+    known_facts = set(normalize_fact(f) for f in initial_facts)
+    execution_trace = []
+    
+    for iteration in range(max_depth):
+        new_facts_found = False
+        for rule in rules:
+            rule_id = rule.get("id")
+            inputs = rule.get("inputs", [])
+            outputs = rule.get("outputs", [])
+            
+            # Find valid substitutions matching all input predicates
+            substitutions = match_rule_inputs(inputs, known_facts)
+            for sub in substitutions:
+                new_inferred = []
+                for out_pattern in outputs:
+                    fact = substitute_variables(out_pattern, sub)
+                    canon_fact = normalize_fact(fact)
+                    if canon_fact not in known_facts:
+                        known_facts.add(canon_fact)
+                        new_inferred.append(canon_fact)
+                        new_facts_found = True
+                        
+                if new_inferred:
+                    execution_trace.append({
+                        "rule_id": rule_id,
+                        "rule_name": rule.get("name"),
+                        "new_facts": new_inferred
+                    })
+        if not new_facts_found:
+            break  # Fixed point reached
+            
+    return known_facts, execution_trace
+\end{lstlisting}

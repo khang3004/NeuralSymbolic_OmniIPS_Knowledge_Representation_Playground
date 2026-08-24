@@ -1,8 +1,27 @@
-\documentclass[11pt,journal,onecolumn]{article}
+\documentclass[12pt,a4paper,oneside]{report}
 
-% --- Core Packages ---
+% ==============================================================================
+% GÓI VÀ CẤU HÌNH NGÔN NGỮ TIẾNG VIỆT & FONT CHỮ
+% ==============================================================================
 \usepackage[utf8]{inputenc}
-\usepackage[margin=1in]{geometry}
+\usepackage[vietnamese]{babel}
+\usepackage{times} % Times New Roman font standard for HCMUS essays
+
+% ==============================================================================
+% CĂN LỀ CHUẨN ĐHKHTN - ĐHQG-HCM
+% Top: 3.5cm, Bottom: 3.0cm, Left: 3.5cm, Right: 2.0cm
+% ==============================================================================
+\usepackage[
+    top=3.5cm,
+    bottom=3.0cm,
+    left=3.5cm,
+    right=2.0cm,
+    headheight=15pt
+]{geometry}
+
+% ==============================================================================
+% CÁC GÓI TOÁN HỌC, ĐỒ HỌA VÀ BẢNG BIỂU
+% ==============================================================================
 \usepackage{amsmath, amssymb, amsfonts, amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -13,22 +32,40 @@
 \usepackage{algpseudocode}
 \usepackage{subcaption}
 \usepackage{tikz}
+\usepackage{setspace}
+\usepackage{fancyhdr}
 \usepackage{hyperref}
 \usepackage{cleveref}
-\usepackage{fontawesome5} % For GitHub and tech stack icons
+\usepackage{fontawesome5} % Icons for GitHub, Check, etc.
 
-% --- TikZ Setup ---
+% --- Dãn dòng 1.15 line theo chuẩn tiểu luận ĐHKHTN ---
+\setstretch{1.15}
+
+% ==============================================================================
+% CẤU HÌNH HEADER / FOOTER
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\thepage} % Số trang phía trên, giữa trang theo chuẩn ĐHKHTN
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% ==============================================================================
+% TIKZ SETUP CHO SƠ ĐỒ KIẾN TRÚC
+% ==============================================================================
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, shadows}
 \tikzset{
-    base/.style={draw, rectangle, rounded corners=4pt, minimum width=3.2cm, minimum height=1cm, text centered, font=\sffamily\small, fill=white},
+    base/.style={draw, rectangle, rounded corners=4pt, minimum width=3.0cm, minimum height=1cm, text centered, font=\small, fill=white},
     process/.style={base, fill=blue!10, line width=1.1pt, draw=blue!70!black},
-    database/.style={draw, cylinder, cylinder points=20, shape border rotate=90, minimum width=2.8cm, minimum height=1.6cm, aspect=0.25, fill=orange!10, draw=orange!70!black, font=\sffamily\small, align=center},
-    decision/.style={draw, diamond, aspect=2, minimum width=3.5cm, minimum height=1cm, text centered, fill=green!10, draw=green!70!black, font=\sffamily\small},
-    agent/.style={base, fill=purple!10, draw=purple!70!black, font=\sffamily\bfseries\small},
+    database/.style={draw, cylinder, shape border rotate=90, minimum width=2.6cm, minimum height=1.4cm, aspect=0.25, fill=orange!10, draw=orange!70!black, font=\small, align=center},
+    decision/.style={draw, diamond, aspect=2, minimum width=3.2cm, minimum height=1cm, text centered, fill=green!10, draw=green!70!black, font=\small},
+    agent/.style={base, fill=purple!10, draw=purple!70!black, font=\bfseries\small},
     arrow/.style={-{Stealth[scale=1.2]}, thick, draw=gray!80!black}
 }
 
-% --- Listing Styles (Python & JSON) ---
+% ==============================================================================
+% CẤU HÌNH MÃ NGUỒN (PYTHON / JSON)
+% ==============================================================================
 \definecolor{codegreen}{rgb}{0.1,0.5,0.1}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.5,0,0.5}
@@ -41,7 +78,7 @@
     keywordstyle=\color{codeblue}\bfseries,
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\small,
+    basicstyle=\ttfamily\footnotesize,
     breakatwhitespace=false,         
     breaklines=true,                 
     captionpos=b,                    
@@ -56,84 +93,61 @@
     rulecolor=\color{gray!30}
 }
 
-\lstdefinestyle{jsonstyle}{
-    backgroundcolor=\color{backgroundgray},   
-    basicstyle=\ttfamily\small,
-    numberstyle=\tiny\color{codegray},
-    stringstyle=\color{codepurple},
-    keywordstyle=\color{codeblue},
-    breakatwhitespace=false,         
-    breaklines=true,                 
-    captionpos=b,                    
-    keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
-    showspaces=false,                
-    showstringspaces=false,
-    showtabs=false,                  
-    tabsize=2,
-    frame=tb,
-    rulecolor=\color{gray!30}
-}
-
-% --- Math Operators and Shortcuts ---
-\newtheorem{definition}{Definition}
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\WM}{\mathcal{WM}}
-\newcommand{\Rules}{\mathcal{R}}
-\newcommand{\Facts}{\mathcal{F}}
-\newcommand{\simscore}{\text{Sim}}
-
-% --- Graphicspath config ---
+% ==============================================================================
+% ĐƯỜNG DẪN ẢNH VÀ HYPERREF
+% ==============================================================================
 \graphicspath{{../assets/}{assets/}}
-
-% --- Document Metadata ---
-\title{
-    \textbf{Omni-IPS: A Hybrid Neuro-Symbolic GraphRAG Solver \\ for Multi-Domain Formal Reasoning} \\
-    \vspace{0.4cm}
-    \large Course Assignment 1: Applied Knowledge Representation
-}
-\author{
-    \textbf{Hoang-Khang Nguyen}$^{(1), (2)}$ \\
-    \small $^{(1)}$University of Science, Ho Chi Minh City, Vietnam \\
-    \small $^{(2)}$Vietnam National University, Ho Chi Minh City, Vietnam \\
-    \small Email: \texttt{25c0103580@student.hcmus.edu.vn} \\
-    \vspace{0.2cm}
-    \small \href{https://github.com/khang3004/NeuralSymbolic_OmniIPS_Knowledge_Representation_Playground.git}{\faGithub\ khang3004/NeuralSymbolic\_OmniIPS\_Knowledge\_Representation\_Playground}
-}
-\date{May 2026}
 
 \hypersetup{
     colorlinks=true,
-    linkcolor=blue!70!black,
+    linkcolor=blue!80!black,
     citecolor=green!50!black,
     urlcolor=teal!80!black,
-    pdftitle={Omni-IPS: A Hybrid Neuro-Symbolic GraphRAG Solver for Multi-Domain Formal Reasoning (Assignment 1 Report)},
-    pdfauthor={Hoang-Khang Nguyen}
+    pdftitle={Báo cáo Tiểu luận: Cỗ máy suy diễn hình học phẳng Neuro-Symbolic (AlphaGeometry-IMO)},
+    pdfauthor={Nguyễn Hoàng Khang}
 }
 
+% ==============================================================================
+% THÂN BÀI BÁO CÁO TIỂU LUẬN
+% ==============================================================================
 \begin{document}
 
-\maketitle
+% 1. Trang bìa chính & Trang áp bìa
+\input{cover}
 
+% 2. Lời cảm ơn & Tóm tắt tiểu luận
+\pagenumbering{roman}
 \input{abstract}
 
+% 3. Mục lục, Danh mục từ viết tắt, Danh mục hình & bảng
 \newpage
 \tableofcontents
 \newpage
+\input{abbreviations}
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+
+% 4. Nội dung chính: Đánh số trang từ 1 (Phần Mở đầu)
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 \input{introduction}
-\input{pipelines}
-\input{knowledge_graph}
-\input{rag_router}
-\input{reasoning_engine}
-\input{system_integration}
-\input{evaluation}
-\input{conclusion}
+\input{chapter1_overview}
+\input{chapter2_representation}
+\input{chapter3_reasoning}
+\input{chapter4_implementation}
+\input{chapter5_conclusion}
 
+% 5. Danh mục tài liệu tham khảo
+\newpage
 \bibliographystyle{plain}
 \bibliography{references}
+
+% 6. Phụ lục
+\newpage
+\input{appendix}
 
 \end{document}
